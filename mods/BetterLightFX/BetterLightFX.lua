@@ -32,6 +32,13 @@ if not _G.BetterLightFX then
         "DefaultOptions.lua",
         "Options.lua"
     }
+    
+    BetterLightFX.ColorSchemeOptions = {
+        {name = "RGB", option_name = "blfx_option_RGB"},
+        {name = "RED", option_name = "blfx_option_RED"},
+        {name = "GREEN", option_name = "blfx_option_GREEN"},
+        {name = "BLUE", option_name = "blfx_option_BLUE"},
+    }
 end
 
 if not BetterLightFX.init then
@@ -319,12 +326,36 @@ function BetterLightFX:SetColor(red, green, blue, alpha, event)
     --BetterLightFX:PrintDebug("Set new color: r="..color.red.." g="..color.green.." b="..color.blue.." a="..color.alpha)
     BetterLightFX:PushColor(Color(alpha, red, green, blue), event)
 end
+
+function BetterLightFX:GetSubVariableFromArray(tbl, index)
+    local new_tbl = {}
+    
+    for i, sub_table in pairs(tbl) do
+        new_tbl[i] = sub_table[index]
+    end
+    
+    return new_tbl
+end
+
 if Hooks then
     Hooks:Add("LocalizationManagerPostInit", BetterLightFX.name .. "Localization", function(loc)
 		LocalizationManager:add_localized_strings({
 			[BetterLightFX.name .. "MainOptionsButton"] = BetterLightFX.name .. " Options",
-			[BetterLightFX.name .. "MainOptionsButtonDescription"] = "Modify " .. BetterLightFX.name .. " options"
+			[BetterLightFX.name .. "MainOptionsButtonDescription"] = "Modify " .. BetterLightFX.name .. " options",
+			[BetterLightFX.name .."toggle_title"] = "Enabled",
+			[BetterLightFX.name .."toggle_help"] = "",
+            [BetterLightFX.name .. "color_scheme_title"] = "Color Scheme",
+			[BetterLightFX.name .. "color_scheme_desc"] = "",
+            [BetterLightFX.name .."toggleDarkIdle_title"] = "Dark on Idle",
+			[BetterLightFX.name .. "toggleDarkIdle_desc"] = "Toggles the turning off of LED's when the keyboard is Idle",
+            
 		})
+        
+        for _, colorScheme in pairs(BetterLightFX.ColorSchemeOptions) do
+            LocalizationManager:add_localized_strings({
+                [colorScheme.option_name] = colorScheme.name
+            })
+        end
 	end)
 
     Hooks:Add("MenuManagerSetupCustomMenus", "Base_Setup" .. BetterLightFX.name .. "Menus", function( menu_manager, nodes )
@@ -333,6 +364,54 @@ if Hooks then
     
     Hooks:Add("MenuManagerPopulateCustomMenus", "Base_Populate" .. BetterLightFX.name .. "Menus", function( menu_manager, nodes )
         --Add buttons
+        
+        
+        MenuCallbackHandler.blfx_toggleBool = function(this, item)
+            BetterLightFX.Options[item:name()] = item:value() == "on" and true or false
+            BetterLightFX:Save()
+        end
+        
+        MenuHelper:AddToggle({
+            id = "Enabled",
+			title = BetterLightFX.name .."toggle_title",
+			desc = BetterLightFX.name .."toggle_help",
+			callback = "blfx_toggleBool",
+			menu_id = BetterLightFX.menuOptions,
+			value = BetterLightFX.Options.Enabled,
+            --priority = 1000
+        })
+        
+        MenuCallbackHandler.blfx_colorSchemeChange = function(this, item)
+            BetterLightFX.Options.ColorScheme = item:value()
+            BetterLightFX:Save()
+        end
+        
+        MenuHelper:AddMultipleChoice({
+			id = BetterLightFX.name .. "colorScheme",
+			title = BetterLightFX.name .. "color_scheme_title",
+			desc = BetterLightFX.name .. "color_scheme_desc",
+			callback = "blfx_colorSchemeChange",
+			menu_id = BetterLightFX.menuOptions,
+			value = BetterLightFX.Options.ColorScheme,
+			items = BetterLightFX:GetSubVariableFromArray(BetterLightFX.ColorSchemeOptions, "option_name"),
+			--priority = 1001
+		})
+        
+        MenuCallbackHandler.blfx_toggleDarkIdle = function(this, item)
+            BetterLightFX.Options.DarkIdle = item:value() == "on" and true or false
+            BetterLightFX:Save()
+        end
+        
+        MenuHelper:AddToggle({
+            id = "DarkIdle",
+			title = BetterLightFX.name .."toggleDarkIdle_title",
+			desc = BetterLightFX.name .."toggleDarkIdle_desc",
+			callback = "blfx_toggleBool",
+			menu_id = BetterLightFX.menuOptions,
+			value = BetterLightFX.Options.DarkIdle,
+            --priority = 1002
+        })
+        
     end)
     
     Hooks:Add("MenuManagerBuildCustomMenus", "Base_Build" .. BetterLightFX.name .. "Menus", function(menu_manager, nodes)
