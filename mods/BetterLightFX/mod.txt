@@ -1,0 +1,18 @@
+{
+	"name" : "BetterLightFX",
+	"description" : "",
+	"author" : "I am not a spy... && GREAT BIG BUSHY BEARD",
+	"contact" : "iamnotaspy@lastbullet.net",
+	"version" : "1",
+	"priority" : 666,
+	"hooks" : [
+    	{ "hook_id" : "lib/network/matchmaking/networkaccountsteam", "script_path" : "BetterLightFX.lua" },
+		{ "hook_id" : "lib/managers/menu/menuscenemanager", "script_path" : "BetterLightFX.lua" }
+	],
+	"updates" : [
+		{
+			"revision" : 1,
+			"identifier" : "betterlightfx"
+		}
+	]
+}
