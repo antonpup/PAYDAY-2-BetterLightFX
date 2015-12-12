@@ -69,24 +69,29 @@ function BetterLightFX:Initialize()
     
     --Override LightFX
     getmetatable(LightFX).set_lamps_betterfx = getmetatable(LightFX).set_lamps
-    getmetatable(LightFX).set_lamps = function()
-        BetterLightFX:PrintDebug("Original LightFX:set_lamps() was overridden.")
+    getmetatable(LightFX).set_lamps = function(red, green, blue, alpha)
+        if BetterLightFX.Options.Enabled then
+            BetterLightFX:PrintDebug("Original LightFX:set_lamps() was overridden.")
+        else
+            LightFX:set_lamps_betterfx(red, green, blue, alpha)
+        end
     end
     
-    BetterLightFX:RegisterEvent("Suspicion", {priority = 1, loop = true, _color = Color.white,
+    BetterLightFX:RegisterEvent("Suspicion", {priority = 1, loop = false, _color = Color.white,
         run = function(self, ...)
-            BetterLightFX:SetColor(self._color.red, self._color.green, self._color.blue, self._color.alpha, "Suspicion")
             self._ran_once = true
         end})
-    BetterLightFX:RegisterEvent("AssaultIndicator", {priority = 2, loop = true, _color = Color.white,
+    BetterLightFX:RegisterEvent("AssaultIndicator", {priority = 2, loop = false, _color = Color.white,
         run = function(self, ...)
             BetterLightFX:SetColor(self._color.red, self._color.green, self._color.blue, self._color.alpha, "AssaultIndicator")
+            coroutine.yield()
             self._ran_once = true 
         end})
     BetterLightFX:RegisterEvent("PointOfNoReturn", {priority = 3, loop = false, _color = Color.white, run = function(self, ...) self._ran_once = true end})
     BetterLightFX:RegisterEvent("Bleedout", {priority = 4, loop = true, _progress = 0,
         run = function(self, ...)
-            BetterLightFX:SetColor(1, 1, 1, self._progress * 1, "EndLoss")
+            BetterLightFX:SetColor(1, 1, 1, self._progress, "Bleedout")
+            coroutine.yield()
             self._ran_once = true
         end})
     BetterLightFX:RegisterEvent("EndLoss", {priority = 5, loop = true, 
@@ -217,7 +222,7 @@ function BetterLightFX:RegisterEvent(name, parameters, override)
     self.events[name].name = name
     self.events[name].enabled = true
     
-    BetterLightFX:PrintDebug("[BetterLightFX] Registered event " .. name)
+    --BetterLightFX:PrintDebug("[BetterLightFX] Registered event " .. name)
 end
 
 function BetterLightFX:DoesEventExist(name)
@@ -230,7 +235,7 @@ function BetterLightFX:DoesEventExist(name)
 end
 
 function BetterLightFX:StartEvent(name)
-    BetterLightFX:PrintDebug("[BetterLightFX] Starting event, " .. name)
+    --BetterLightFX:PrintDebug("[BetterLightFX] Starting event, " .. name)
     if not self:DoesEventExist(name) then
         return
     end
@@ -246,11 +251,11 @@ function BetterLightFX:StartEvent(name)
         self._current_event = name
         self.events[name]._ran_once = false
     end
-    BetterLightFX:PrintDebug("[BetterLightFX] Event started, " .. name)
+    --BetterLightFX:PrintDebug("[BetterLightFX] Event started, " .. name)
 end
 
 function BetterLightFX:EndEvent(name)
-    BetterLightFX:PrintDebug("[BetterLightFX] Ending event, " .. name)
+    --BetterLightFX:PrintDebug("[BetterLightFX] Ending event, " .. name)
     
     if not self:DoesEventExist(name) then
         return
@@ -258,24 +263,25 @@ function BetterLightFX:EndEvent(name)
     
     if self._current_event and self._current_event == name then
         self._current_event = nil
-        --BetterLightFX:SetColor(0, 0, 0, 0, nil)
+        if BetterLightFX.Options.DarkIdle then
+            BetterLightFX:SetColor(0, 0, 0, 0, nil)
+        end
     end
     
-    BetterLightFX:PrintDebug("[BetterLightFX] Event ended, " .. name)
+    --BetterLightFX:PrintDebug("[BetterLightFX] Event ended, " .. name)
 end
 
 function BetterLightFX:UpdateEvent(name, parameters)
-    BetterLightFX:PrintDebug("[BetterLightFX] Updating event, " .. name)
+    --BetterLightFX:PrintDebug("[BetterLightFX] Updating event, " .. name)
     if not self:DoesEventExist(name) then
         return
     end
     
     for parameter, value in pairs(parameters) do
         self.events[name][parameter] = value
-        BetterLightFX:PrintDebug("[BetterLightFX] Updating " .. name..", parameter=" .. parameter)
     end
     
-     BetterLightFX:PrintDebug("[BetterLightFX] Event updated, " .. name)
+     --BetterLightFX:PrintDebug("[BetterLightFX] Event updated, " .. name)
 end
 
 
@@ -299,6 +305,10 @@ end
 
 function BetterLightFX:PushColor(color, event)
     local debug_clockstart = os.clock() --DEBUG
+    
+    if not BetterLightFX.Options.Enabled then
+        return
+    end
     
     --Color is already being set
     if BetterLightFX.is_setting_color then
@@ -328,8 +338,18 @@ function BetterLightFX:PushColor(color, event)
     
     if SystemInfo:platform() == Idstring("WIN32") and managers.network.account:has_alienware() and not BetterLightFX.is_setting_color and event == BetterLightFX._current_event then
         BetterLightFX.is_setting_color = true
-        --BetterLightFX:PrintDebug("Set new color: r="..color.red.." g="..color.green.." b="..color.blue.." a="..color.alpha)
-        BetterLightFX.current_color = color
+        
+        --RGB to Mono
+        if BetterLightFX.ColorSchemeOptions[BetterLightFX.Options.ColorScheme].name  == "RED" and color.red + color.green + color.blue > 0 then
+            BetterLightFX.current_color = Color(color.alpha, (color.red + color.green + color.blue) / 3.0 + 0.3, 0, 0) 
+        elseif BetterLightFX.ColorSchemeOptions[BetterLightFX.Options.ColorScheme].name == "GREEN" then
+            BetterLightFX.current_color = Color(color.alpha, 0, (color.red + color.green + color.blue) / 3.0 + 0.3, 0) 
+        elseif BetterLightFX.ColorSchemeOptions[BetterLightFX.Options.ColorScheme].name == "BLUE" then
+            BetterLightFX.current_color = Color(color.alpha, 0, 0, (color.red + color.green + color.blue) / 3.0 + 0.3)
+        else
+            BetterLightFX.current_color = color
+        end
+        
         LightFX:set_lamps_betterfx(math.floor(BetterLightFX.current_color.red * 255.0), math.floor(BetterLightFX.current_color.green * 255.0), math.floor(BetterLightFX.current_color.blue * 255.0), math.floor(BetterLightFX.current_color.alpha * 255.0))
         BetterLightFX.is_setting_color = false
     end
@@ -384,9 +404,6 @@ if Hooks then
     
     Hooks:Add("MenuManagerPopulateCustomMenus", "Base_Populate" .. BetterLightFX.name .. "Menus", function( menu_manager, nodes )
         --Add buttons
-    end)
-    
-       --[[
         
         MenuCallbackHandler.blfx_toggleBool = function(this, item)
             BetterLightFX.Options[item:name()] = item:value() == "on" and true or false
@@ -400,7 +417,7 @@ if Hooks then
 			callback = "blfx_toggleBool",
 			menu_id = BetterLightFX.menuOptions,
 			value = BetterLightFX.Options.Enabled,
-            --priority = 1000
+            priority = 1000
         })
         
         
@@ -417,7 +434,7 @@ if Hooks then
 			menu_id = BetterLightFX.menuOptions,
 			value = BetterLightFX.Options.ColorScheme,
 			items = BetterLightFX:GetSubVariableFromArray(BetterLightFX.ColorSchemeOptions, "option_name"),
-			--priority = 1001
+			priority = 1001
 		})
         
         
@@ -428,15 +445,15 @@ if Hooks then
 			callback = "blfx_toggleBool",
 			menu_id = BetterLightFX.menuOptions,
 			value = BetterLightFX.Options.DarkIdle,
-            --priority = 1002
+            priority = 1002
         })
+    
+    end)
     
     Hooks:Add("MenuManagerBuildCustomMenus", "Base_Build" .. BetterLightFX.name .. "Menus", function(menu_manager, nodes)
 		nodes[BetterLightFX.menuOptions] = MenuHelper:BuildMenu(BetterLightFX.menuOptions)
 		MenuHelper:AddMenuItem(MenuHelper.menus.lua_mod_options_menu, BetterLightFX.menuOptions, BetterLightFX.name .. "MainOptionsButton", BetterLightFX.name .. "MainOptionsButtonDescription", 1)
     end)
-    ]]
-    
 
 end
 

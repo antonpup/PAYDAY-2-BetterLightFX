@@ -1,10 +1,10 @@
-Hooks:Post( HUDSuspicion, "hide", "HUDSuspicion:hide_BetterLightFX", function()
+Hooks:PostHook( HUDSuspicion, "hide", "HUDSuspicion:hide_BetterLightFX", function()
     if BetterLightFX then
         BetterLightFX:EndEvent("Suspicion")
     end
 end )
 
-Hooks:Post( HUDSuspicion, "back_to_stealth", "HUDSuspicion:back_to_stealth_BetterLightFX", function()
+Hooks:PostHook( HUDSuspicion, "back_to_stealth", "HUDSuspicion:back_to_stealth_BetterLightFX", function()
     if BetterLightFX then
         BetterLightFX:EndEvent("Suspicion")
     end
@@ -101,11 +101,11 @@ function HUDSuspicion:animate_eye()
             if BetterLightFX then
                 BetterLightFX:StartEvent("Suspicion")
                 if value == 1 then
-                    BetterLightFX:UpdateEvent("Suspicion", {["_color"] = Color(1, 1, 0, 0)})
+                    BetterLightFX:SetColor(1.0, 0.0, 0.0, 1.0, "Suspicion")
                 elseif value < 0.5 then
-                    BetterLightFX:UpdateEvent("Suspicion", {["_color"] = Color(value, 0, 0, 1)})
+                    BetterLightFX:SetColor(0.0, 0.0, 1.0, value, "Suspicion")
                 elseif value >= 0.5 then
-                    BetterLightFX:UpdateEvent("Suspicion", {["_color"] = Color(value, (value - 0.5) * 2.0, 0, 1.0 - ((value - 0.5) * 2.0))})
+                    BetterLightFX:SetColor((value - 0.5) * 2.0, 0, 1.0 - ((value - 0.5) * 2.0), value, "Suspicion")
                 end
             end
             

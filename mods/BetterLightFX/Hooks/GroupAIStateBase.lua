@@ -13,4 +13,15 @@ function GroupAIStateBase:set_assault_mode(enabled)
 			end
 		end
 	end
+	if BetterLightFX then
+		if self._assault_mode then
+            BetterLightFX:SetColor(1, 0, 0, 1, nil)
+		else
+            if BetterLightFX.Options.Enabled and BetterLightFX.Options.DarkIdle then
+                BetterLightFX:SetColor(0, 0, 0, 0, nil)
+            else
+                BetterLightFX:SetColor(0, 1, 0, 1, nil)
+            end
+		end
+	end
 end
