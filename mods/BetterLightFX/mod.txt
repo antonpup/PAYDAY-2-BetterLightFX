@@ -7,7 +7,12 @@
 	"priority" : 666,
 	"hooks" : [
     	{ "hook_id" : "lib/network/matchmaking/networkaccountsteam", "script_path" : "BetterLightFX.lua" },
-		{ "hook_id" : "lib/managers/menu/menuscenemanager", "script_path" : "BetterLightFX.lua" }
+		{ "hook_id" : "lib/managers/menu/menuscenemanager", "script_path" : "BetterLightFX.lua" },
+        { "hook_id" : "lib/managers/group_ai_states/groupaistatebase", "script_path" : "BetterLightFX.lua" },
+        { "hook_id" : "lib/managers/hud/hudsuspicion", "script_path" : "BetterLightFX.lua" },
+        { "hook_id" : "lib/units/beings/player/playerdamage", "script_path" : "BetterLightFX.lua" },
+        { "hook_id" : "lib/states/missionendstate", "script_path" : "BetterLightFX.lua" },
+        { "hook_id" : "lib/managers/hud/hudassaultcorner", "script_path" : "BetterLightFX.lua" }
 	],
 	"updates" : [
 		{

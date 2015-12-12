@@ -26,6 +26,12 @@ if not _G.BetterLightFX then
     
     BetterLightFX.HookFiles = {
         ["lib/network/matchmaking/networkaccountsteam"] = "NetworkAccountSteam.lua",
+        ["lib/managers/menu/menuscenemanager"] = "MenuScene.lua",
+        ["lib/managers/group_ai_states/groupaistatebase"] = "GroupAIStateBase.lua",
+        ["lib/managers/hud/hudsuspicion"] = "HudSuspicion.lua",
+        ["lib/units/beings/player/playerdamage"] = "PlayerDamage.lua",
+        ["lib/states/missionendstate"] = "MissionEndState.lua",
+        ["lib/managers/hud/hudassaultcorner"] = "HUDAssaultCorner.lua",
     }
     
     BetterLightFX.LUA = {
@@ -67,10 +73,23 @@ function BetterLightFX:Initialize()
         BetterLightFX:PrintDebug("Original LightFX:set_lamps() was overridden.")
     end
     
-    BetterLightFX:RegisterEvent("Suspicion", {priority = 1, loop = false, _detection = 0, run = function(self, ...) self._ran_once = true end})
-    BetterLightFX:RegisterEvent("PointOfNoReturn", {priority = 2, loop = false, _color = Color.white, run = function(self, ...) self._ran_once = true end})
-    BetterLightFX:RegisterEvent("Bleedout", {priority = 3, loop = false, _progress = 0, run = function(self, ...) self._ran_once = true end})
-    BetterLightFX:RegisterEvent("EndLoss", {priority = 4, loop = true, 
+    BetterLightFX:RegisterEvent("Suspicion", {priority = 1, loop = true, _color = Color.white,
+        run = function(self, ...)
+            BetterLightFX:SetColor(self._color.red, self._color.green, self._color.blue, self._color.alpha, "Suspicion")
+            self._ran_once = true
+        end})
+    BetterLightFX:RegisterEvent("AssaultIndicator", {priority = 2, loop = true, _color = Color.white,
+        run = function(self, ...)
+            BetterLightFX:SetColor(self._color.red, self._color.green, self._color.blue, self._color.alpha, "AssaultIndicator")
+            self._ran_once = true 
+        end})
+    BetterLightFX:RegisterEvent("PointOfNoReturn", {priority = 3, loop = false, _color = Color.white, run = function(self, ...) self._ran_once = true end})
+    BetterLightFX:RegisterEvent("Bleedout", {priority = 4, loop = true, _progress = 0,
+        run = function(self, ...)
+            BetterLightFX:SetColor(1, 1, 1, self._progress * 1, "EndLoss")
+            self._ran_once = true
+        end})
+    BetterLightFX:RegisterEvent("EndLoss", {priority = 5, loop = true, 
         run = function(self, ...)
             while true do
                 BetterLightFX:SetColor(0, 0, 1, 1, "EndLoss")
@@ -95,7 +114,7 @@ function BetterLightFX:Initialize()
             end
         end})
         
-    BetterLightFX:RegisterEvent("SafeDrilled", {priority = 5, loop = false, _color = Color.white,
+    BetterLightFX:RegisterEvent("SafeDrilled", {priority = 6, loop = false, _color = Color.white,
         run = function(self, ...)
             
             --Fade in
@@ -188,8 +207,8 @@ function BetterLightFX:wait(seconds, fixed_dt)
 	end
 end
 
-function BetterLightFX:RegisterEvent(name, parameters)
-    if self.events[name] then
+function BetterLightFX:RegisterEvent(name, parameters, override)
+    if self.events[name] and not override then
         BetterLightFX:PrintDebug("[BetterLightFX] Cannot replace existing event, " .. name)
         return
     end
@@ -239,6 +258,7 @@ function BetterLightFX:EndEvent(name)
     
     if self._current_event and self._current_event == name then
         self._current_event = nil
+        --BetterLightFX:SetColor(0, 0, 0, 0, nil)
     end
     
     BetterLightFX:PrintDebug("[BetterLightFX] Event ended, " .. name)
@@ -364,7 +384,9 @@ if Hooks then
     
     Hooks:Add("MenuManagerPopulateCustomMenus", "Base_Populate" .. BetterLightFX.name .. "Menus", function( menu_manager, nodes )
         --Add buttons
-        
+    end)
+    
+       --[[
         
         MenuCallbackHandler.blfx_toggleBool = function(this, item)
             BetterLightFX.Options[item:name()] = item:value() == "on" and true or false
@@ -380,6 +402,7 @@ if Hooks then
 			value = BetterLightFX.Options.Enabled,
             --priority = 1000
         })
+        
         
         MenuCallbackHandler.blfx_colorSchemeChange = function(this, item)
             BetterLightFX.Options.ColorScheme = item:value()
@@ -397,10 +420,6 @@ if Hooks then
 			--priority = 1001
 		})
         
-        MenuCallbackHandler.blfx_toggleDarkIdle = function(this, item)
-            BetterLightFX.Options.DarkIdle = item:value() == "on" and true or false
-            BetterLightFX:Save()
-        end
         
         MenuHelper:AddToggle({
             id = "DarkIdle",
@@ -411,14 +430,12 @@ if Hooks then
 			value = BetterLightFX.Options.DarkIdle,
             --priority = 1002
         })
-        
-    end)
     
     Hooks:Add("MenuManagerBuildCustomMenus", "Base_Build" .. BetterLightFX.name .. "Menus", function(menu_manager, nodes)
 		nodes[BetterLightFX.menuOptions] = MenuHelper:BuildMenu(BetterLightFX.menuOptions)
 		MenuHelper:AddMenuItem(MenuHelper.menus.lua_mod_options_menu, BetterLightFX.menuOptions, BetterLightFX.name .. "MainOptionsButton", BetterLightFX.name .. "MainOptionsButtonDescription", 1)
     end)
-    
+    ]]
     
 
 end
