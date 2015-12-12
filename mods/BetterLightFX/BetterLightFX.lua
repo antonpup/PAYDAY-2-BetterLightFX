@@ -11,7 +11,10 @@ if not _G.BetterLightFX then
     
     BetterLightFX.current_color = Color.White
     BetterLightFX._current_event = nil
+    BetterLightFX._current_event_routine = nil
     BetterLightFX.is_setting_color = false
+    BetterLightFX._last_light_set_at = 0
+    BetterLightFX.min_wait_time = 0.01
     
     BetterLightFX.events = {}
     
@@ -33,6 +36,7 @@ if not _G.BetterLightFX then
         ["lib/units/beings/player/playerdamage"] = "PlayerDamage.lua",
         ["lib/states/missionendstate"] = "MissionEndState.lua",
         ["lib/managers/hud/hudassaultcorner"] = "HUDAssaultCorner.lua",
+        ["lib/managers/hud/hudobjectives"] = "HUDObjectives.lua",
     }
     
     BetterLightFX.LUA = {
@@ -48,7 +52,6 @@ if not _G.BetterLightFX then
     }
     
     BetterLightFX.EventModOptions = {}
-
 end
 
 function BetterLightFX:Initialize()
@@ -78,9 +81,9 @@ function BetterLightFX:Processor()
     BetterLightFX:CreateCoroutine()
     
     Hooks:Add("MenuUpdate", "MenuUpdate_BetterLightFX", function( t, dt )
-        if coroutine.status(BetterLightFX.routine) ~= "dead" then
+        if BetterLightFX.routine and coroutine.status(BetterLightFX.routine) ~= "dead" then
             coroutine.resume(BetterLightFX.routine, dt)
-        elseif coroutine.status(BetterLightFX.routine) == "dead" then
+        elseif not BetterLightFX.routine or coroutine.status(BetterLightFX.routine) == "dead" then
             BetterLightFX:CreateCoroutine()
             coroutine.resume(BetterLightFX.routine, dt)
         end
@@ -88,9 +91,9 @@ function BetterLightFX:Processor()
     end)
 
     Hooks:Add("GameSetupUpdate", "GameSetupUpdate_BetterLightFX", function( t, dt )
-        if coroutine.status(BetterLightFX.routine) ~= "dead" then
+        if BetterLightFX.routine and coroutine.status(BetterLightFX.routine) ~= "dead" then
             coroutine.resume(BetterLightFX.routine, dt)
-        elseif coroutine.status(BetterLightFX.routine) == "dead" then
+        elseif not BetterLightFX.routine or coroutine.status(BetterLightFX.routine) == "dead" then
             BetterLightFX:CreateCoroutine()
             coroutine.resume(BetterLightFX.routine, dt)
         end
@@ -103,28 +106,28 @@ function BetterLightFX:CreateCoroutine()
         while true do
             if self._current_event then
                 if self.events[self._current_event] then
-                    --BetterLightFX:PrintDebug("Attempting to run " .. self._current_event)
+                    BetterLightFX:PrintDebug("Attempting to run " .. self._current_event)
                     
                      if self.events[self._current_event].loop then
                      
-                        if not self.events[self._current_event].routine or coroutine.status(self.events[self._current_event].routine) == "dead" then
-                            self.events[self._current_event].routine = coroutine.wrap(self.events[self._current_event]:run())
+                        if not BetterLightFX._current_event_routine or coroutine.status(BetterLightFX._current_event_routine) == "dead" then
+                            BetterLightFX._current_event_routine = coroutine.wrap(self.events[self._current_event]:run())
                         end
-                        coroutine.resume(self.events[self._current_event].routine, dt)
+                        coroutine.resume(BetterLightFX._current_event_routine, dt)
                         
                      else
                      
                         if not self.events[self._current_event]._ran_once then
-                            if not self.events[self._current_event].routine or coroutine.status(self.events[self._current_event].routine) == "dead" then
-                                self.events[self._current_event].routine = coroutine.wrap(self.events[self._current_event]:run())
+                            if not BetterLightFX._current_event_routine or coroutine.status(BetterLightFX._current_event_routine) == "dead" then
+                                BetterLightFX._current_event_routine = coroutine.wrap(self.events[self._current_event]:run())
                             end
-                            coroutine.resume(self.events[self._current_event].routine, dt)
+                            coroutine.resume(BetterLightFX._current_event_routine, dt)
                         end
                         
                     end
                     
                 end
-                --BetterLightFX:PrintDebug("Ran " .. self._current_event)
+                BetterLightFX:PrintDebug("Ran " .. self._current_event)
             end
             coroutine.yield()
         end
@@ -156,7 +159,7 @@ function BetterLightFX:RegisterEvent(name, parameters, override)
         })
     end
     
-    --BetterLightFX:PrintDebug("[BetterLightFX] Registered event " .. name)
+    BetterLightFX:PrintDebug("[BetterLightFX] Registered event " .. name)
 end
 
 function BetterLightFX:GetEventParamaterValue(name, param)
@@ -166,6 +169,7 @@ function BetterLightFX:GetEventParamaterValue(name, param)
 
     return self.events[name][param]
 end
+
 
 function BetterLightFX:DoesEventExist(name)
     if not self.events[name] then
@@ -177,7 +181,7 @@ function BetterLightFX:DoesEventExist(name)
 end
 
 function BetterLightFX:StartEvent(name)
-    --BetterLightFX:PrintDebug("[BetterLightFX] Starting event, " .. name)
+    BetterLightFX:PrintDebug("[BetterLightFX] Starting event, " .. name)
     if not self:DoesEventExist(name) then
         return
     end
@@ -188,9 +192,11 @@ function BetterLightFX:StartEvent(name)
      
     if self._current_event and self.events[self._current_event].priority < self.events[name].priority then
         self._current_event = name
+        BetterLightFX._current_event_routine = nil
         self.events[name]._ran_once = false
     elseif not self._current_event then
         self._current_event = name
+        BetterLightFX._current_event_routine = nil
         self.events[name]._ran_once = false
     end
     --BetterLightFX:PrintDebug("[BetterLightFX] Event started, " .. name)
@@ -214,7 +220,7 @@ function BetterLightFX:EndEvent(name)
 end
 
 function BetterLightFX:UpdateEvent(name, parameters)
-    --BetterLightFX:PrintDebug("[BetterLightFX] Updating event, " .. name)
+     BetterLightFX:PrintDebug("[BetterLightFX] Updating event, " .. name)
     if not self:DoesEventExist(name) then
         return
     end
@@ -223,7 +229,7 @@ function BetterLightFX:UpdateEvent(name, parameters)
         self.events[name][parameter] = value
     end
     
-    --BetterLightFX:PrintDebug("[BetterLightFX] Event updated, " .. name)
+     BetterLightFX:PrintDebug("[BetterLightFX] Event updated, " .. name)
 end
 
 
@@ -240,7 +246,7 @@ function BetterLightFX:PrintDebug(message)
 end
 
 function BetterLightFX:PrintDebugElapsed(elapsedtime, message)
-    if elapsedtime > 0.01 then
+    if elapsedtime > 0.05 then
         BetterLightFX:PrintDebug(message .. " took " .. string.format("%.2f", elapsedtime) .. " seconds.")
     end
 end
@@ -249,6 +255,10 @@ function BetterLightFX:PushColor(color, event)
     local debug_clockstart = os.clock() --DEBUG
     
     if not BetterLightFX.Options.Enabled then
+        return
+    end
+    
+    if os.clock() - BetterLightFX._last_light_set_at < BetterLightFX.min_wait_time then
         return
     end
     
@@ -290,8 +300,9 @@ function BetterLightFX:PushColor(color, event)
         else
             BetterLightFX.current_color = color
         end
-        BetterLightFX.current_color = color
+        
         LightFX:set_lamps_betterfx(math.floor(BetterLightFX.current_color.red * 255.0), math.floor(BetterLightFX.current_color.green * 255.0), math.floor(BetterLightFX.current_color.blue * 255.0), math.floor(BetterLightFX.current_color.alpha * 255.0))
+        BetterLightFX._last_light_set_at = os.clock()
         BetterLightFX.is_setting_color = false
     end
     
@@ -334,7 +345,7 @@ function BetterLightFX:CreateColorOption(node, params)
     local colors = {"red", "green", "blue"}
     
     for i, color in pairs(colors) do
-log("create color")    
+        log("create color")    
         local data = {
             type = "CoreMenuItemSlider.ItemSlider",
             min = 0,
@@ -373,22 +384,33 @@ function BetterLightFX:InitEvents()
         run = function(self, ...)
             self._ran_once = true
         end})
-    BetterLightFX:RegisterEvent("AssaultIndicator", {priority = 2, loop = false, _color = Color.white,
+    BetterLightFX:RegisterEvent("AssaultIndicator", {priority = 2, loop = true, _color = Color.white,
         run = function(self, ...)
-            BetterLightFX:SetColor(self._color.red, self._color.green, self._color.blue, self._color.alpha, "AssaultIndicator")
-            coroutine.yield()
-            self._ran_once = true 
+            local t = 3
+            while true do
+                local dt = coroutine.yield()
+                t = t - dt
+                local cv = math.abs((math.sin(t * 180 * 1)))
+                local color2set = Color(1, self._color.red * cv, self._color.green * cv, self._color.blue * cv)
+                
+                BetterLightFX:SetColor(color2set.red, color2set.green, color2set.blue, color2set.alpha, "AssaultIndicator")
+                 self._ran_once = true
+            end
+           
         end})
-    BetterLightFX:RegisterEvent("PointOfNoReturn", {priority = 3, loop = false, _color = Color.white, options = {_color = {typ = "color", localization = "Colour"}}, run = function(self, ...) self._ran_once = true end})
+    BetterLightFX:RegisterEvent("PointOfNoReturn", {priority = 3, loop = false, _color = Color.white, options = {_color = {typ = "color", localization = "Color"}}, run = function(self, ...) self._ran_once = true end})
     BetterLightFX:RegisterEvent("Bleedout", {priority = 4, loop = true, _progress = 0,
         run = function(self, ...)
+            log("Bleedout - Started")
             BetterLightFX:SetColor(1, 1, 1, self._progress, "Bleedout")
             coroutine.yield()
             self._ran_once = true
         end})
     BetterLightFX:RegisterEvent("EndLoss", {priority = 5, loop = true, 
         run = function(self, ...)
+            log("EndLoss - Started")
             while true do
+                log("EndLoss - Blue turn")
                 BetterLightFX:SetColor(0, 0, 1, 1, "EndLoss")
                 BetterLightFX:wait(0.125)
                 BetterLightFX:SetColor(0, 0, 1, 0, "EndLoss")
@@ -398,6 +420,7 @@ function BetterLightFX:InitEvents()
                 BetterLightFX:SetColor(0, 0, 1, 0, "EndLoss")
                 BetterLightFX:wait(0.25)
                 
+                log("EndLoss - Red turn")
                 BetterLightFX:SetColor(1, 0, 0, 1, "EndLoss")
                 BetterLightFX:wait(0.125)
                 BetterLightFX:SetColor(1, 0, 0, 0, "EndLoss")
@@ -463,7 +486,7 @@ if Hooks then
 			[BetterLightFX.name .. "modEvents_desc"] = "",
             [BetterLightFX.name .. "events_title"] = "Event",
 			[BetterLightFX.name .. "events_desc"] = "",
-			["BLFXevent_PointOfNoReturn"] = "PointOfNoReturn",
+			["BLFXevent_PointOfNoReturn"] = "Point Of No Return",
             
 		})
         
@@ -481,7 +504,6 @@ if Hooks then
     
     Hooks:Add("MenuManagerPopulateCustomMenus", "Base_Populate" .. BetterLightFX.name .. "Menus", function( menu_manager, nodes )
         --Add buttons
-        
         
         MenuCallbackHandler.blfx_toggleBool = function(this, item)
             BetterLightFX.Options[item:name()] = item:value() == "on" and true or false
@@ -518,8 +540,9 @@ if Hooks then
 			menu_id = BetterLightFX.menuOptions,
 			value = BetterLightFX.Options.ColorScheme,
 			items = BetterLightFX:GetSubVariableFromArray(BetterLightFX.ColorSchemeOptions, "option_name"),
-            priority = 998
+			priority = 998
 		})
+        
         
         MenuHelper:AddToggle({
             id = "DarkIdle",
@@ -530,7 +553,7 @@ if Hooks then
 			value = BetterLightFX.Options.DarkIdle,
             priority = 997
         })
-        
+    
         MenuCallbackHandler.blfx_createEventModMenuItems = function(this, item)
             BetterLightFX.currentEvent = item:name() == (BetterLightFX.name .. "events") and item:value() or 1
             
@@ -604,11 +627,8 @@ if Hooks then
     Hooks:Add("MenuManagerBuildCustomMenus", "Base_Build" .. BetterLightFX.name .. "Menus", function(menu_manager, nodes)
 		nodes[BetterLightFX.menuOptions] = MenuHelper:BuildMenu(BetterLightFX.menuOptions)
 		MenuHelper:AddMenuItem(MenuHelper.menus.lua_mod_options_menu, BetterLightFX.menuOptions, BetterLightFX.name .. "MainOptionsButton", BetterLightFX.name .. "MainOptionsButtonDescription", 1)
-        
         nodes[BetterLightFX.menuEventOptions] = MenuHelper:BuildMenu(BetterLightFX.menuEventOptions)
     end)
-    
-    
 
 end
 

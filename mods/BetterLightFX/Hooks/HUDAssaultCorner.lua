@@ -11,12 +11,18 @@ Hooks:PostHook( HUDAssaultCorner, "_hide_icon_assaultbox", "HUDAssaultCorner:_hi
 end )
 
 Hooks:PostHook( HUDAssaultCorner, "_start_assault", "HUDAssaultCorner:_start_assault_BetterLightFX", function(self)
-    if BetterLightFX and self._assault then
+    if BetterLightFX then
         BetterLightFX:StartEvent("AssaultIndicator")
-        BetterLightFX:SetColor(self._current_assault_color.red, self._current_assault_color.green, self._current_assault_color.blue, self._current_assault_color.alpha, nil )
+        BetterLightFX:SetColor(self._current_assault_color.red, self._current_assault_color.green, self._current_assault_color.blue, self._current_assault_color.alpha, "AssaultIndicator" )
+        BetterLightFX:UpdateEvent("AssaultIndicator", {["_color"] = self._current_assault_color})
     end
 end )
 
+Hooks:PostHook( HUDAssaultCorner, "sync_set_assault_mode", "HUDAssaultCorner:sync_set_assault_mode_BetterLightFX", function(self)
+    if BetterLightFX then
+        BetterLightFX:UpdateEvent("AssaultIndicator", {["_color"] = self._current_assault_color})
+    end
+end )
 
 function HUDAssaultCorner:flash_point_of_no_return_timer(beep)
 	local function flash_timer(o)
