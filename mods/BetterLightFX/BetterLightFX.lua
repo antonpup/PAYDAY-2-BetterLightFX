@@ -3,11 +3,16 @@ if not _G.BetterLightFX then
     
     BetterLightFX.name = "BetterLightFX"
     
+    --Debugging and logging
+    BetterLightFX.LOG_LEVEL_NONE = 0
+    BetterLightFX.LOG_LEVEL_INFO = 1
+    BetterLightFX.LOG_LEVEL_WARNING = 2
+    BetterLightFX.LOG_LEVEL_DEBUG = 3
     BetterLightFX.debug_enabled = true
     BetterLightFX.debug_systemprint = false
+    BetterLightFX.debug_level = BetterLightFX.LOG_LEVEL_WARNING
     
     BetterLightFX._initialized = false
-    
     
     BetterLightFX.current_color = Color.White
     BetterLightFX._current_event = nil
@@ -37,6 +42,7 @@ if not _G.BetterLightFX then
         ["lib/managers/hud/hudassaultcorner"] = "HUDAssaultCorner.lua",
         ["lib/managers/hud/hudobjectives"] = "HUDObjectives.lua",
         ["lib/managers/hudmanagerpd2"] = "HUDManagerPD2.lua",
+        ["core/lib/managers/coreenvironmentcontrollermanager"] = "CoreEnvironmentControllerManager.lua",
     }
     
     BetterLightFX.LUA = {
@@ -63,7 +69,7 @@ function BetterLightFX:Initialize()
     getmetatable(LightFX).set_lamps_betterfx = getmetatable(LightFX).set_lamps
     getmetatable(LightFX).set_lamps = function(red, green, blue, alpha)
         if BetterLightFX.Options.Enabled then
-            BetterLightFX:PrintDebug("Original LightFX:set_lamps() was overridden.")
+            BetterLightFX:PrintDebug("Original LightFX:set_lamps() was overridden.", BetterLightFX.LOG_LEVEL_INFO)
         else
             LightFX:set_lamps_betterfx(red, green, blue, alpha)
         end
@@ -126,7 +132,18 @@ function BetterLightFX:InitEvents()
             BetterLightFX:SetColor(color2set.red, color2set.green, color2set.blue, color2set.alpha, self.name)
             self._ran_once = true
         end})
-    BetterLightFX:RegisterEvent("EndLoss", {priority = 6, enabled = true, loop = true, 
+    BetterLightFX:RegisterEvent("Flashbang", {priority = 6, enabled = true, loop = true, _color = Color(1, 1, 1, 1), _flashamount = 0, 
+        options = {
+            enabled = {typ = "bool", localization = "Enabled"}, 
+            _color = {typ = "color", localization = "Color"}
+        },
+        run = function(self, ...)
+            BetterLightFX:SetColor(self._color.red, self._color.green, self._color.blue, self._flashamount, self.name)
+            coroutine.yield()
+            self._ran_once = true
+        end})
+        
+    BetterLightFX:RegisterEvent("EndLoss", {priority = 7, enabled = true, loop = true, 
         options = {
             enabled = {typ = "bool", localization = "Enabled"}
         }, 
@@ -154,7 +171,7 @@ function BetterLightFX:InitEvents()
             end
         end})
         
-    BetterLightFX:RegisterEvent("SafeDrilled", {priority = 7, enabled = true, loop = false, _color = Color(1, 1, 1, 1), _duration = 5,
+    BetterLightFX:RegisterEvent("SafeDrilled", {priority = 8, enabled = true, loop = false, _color = Color(1, 1, 1, 1), _duration = 5,
         options = {
             enabled = {typ = "bool", localization = "Enabled"},
             _duration = {typ = "number", localization = "Light Duration (Seconds)", maxVal = 30}
@@ -206,7 +223,7 @@ function BetterLightFX:Processor()
                 end
             end
         end
-        --BetterLightFX:PrintDebug("Status of self.routine " .. coroutine.status(BetterLightFX.routine))
+        --BetterLightFX:PrintDebug("Status of self.routine " .. coroutine.status(BetterLightFX.routine), BetterLightFX.LOG_LEVEL_DEBUG)
     end)
 
     Hooks:Add("GameSetupUpdate", "GameSetupUpdate_BetterLightFX", function( t, dt )
@@ -229,7 +246,7 @@ function BetterLightFX:Processor()
                 end
             end
         end
-        --BetterLightFX:PrintDebug("Status of self.routine " .. coroutine.status(BetterLightFX.routine))
+        --BetterLightFX:PrintDebug("Status of self.routine " .. coroutine.status(BetterLightFX.routine), BetterLightFX.LOG_LEVEL_DEBUG)
     end)
 end
 
@@ -238,7 +255,7 @@ function BetterLightFX:CreateCoroutine()
         while true do
             if self._current_event then
                 if self.events[self._current_event] then
-                    --BetterLightFX:PrintDebug("Attempting to run " .. self._current_event)
+                    --BetterLightFX:PrintDebug("Attempting to run " .. self._current_event, BetterLightFX.LOG_LEVEL_DEBUG)
                     
                         if self.events[self._current_event].loop then
                             self.events[self._current_event]:run()
@@ -250,7 +267,7 @@ function BetterLightFX:CreateCoroutine()
                     end
                     
                 end
-                --BetterLightFX:PrintDebug("Ran " .. self._current_event)
+                --BetterLightFX:PrintDebug("Ran " .. self._current_event, BetterLightFX.LOG_LEVEL_DEBUG)
             end
             coroutine.yield()
         end
@@ -267,7 +284,7 @@ end
 
 function BetterLightFX:RegisterEvent(name, parameters, override)
     if self.events[name] and not override then
-        BetterLightFX:PrintDebug("[BetterLightFX] Cannot replace existing event, " .. name)
+        BetterLightFX:PrintDebug("[BetterLightFX] Cannot replace existing event, " .. name, BetterLightFX.LOG_LEVEL_INFO)
         return
     end
     
@@ -301,7 +318,7 @@ function BetterLightFX:RegisterEvent(name, parameters, override)
         end
     end
     
-    BetterLightFX:PrintDebug("[BetterLightFX] Registered event " .. name)
+    BetterLightFX:PrintDebug("[BetterLightFX] Registered event " .. name, BetterLightFX.LOG_LEVEL_INFO)
 end
 
 function BetterLightFX:GetEventParamaterValue(name, param)
@@ -315,7 +332,7 @@ end
 
 function BetterLightFX:DoesEventExist(name)
     if not self.events[name] then
-        BetterLightFX:PrintDebug("[BetterLightFX] Event does not exist, " .. tostring(name))
+        BetterLightFX:PrintDebug("[BetterLightFX] Event does not exist, " .. tostring(name), BetterLightFX.LOG_LEVEL_WARNING)
         return false
     else
         return true
@@ -323,7 +340,7 @@ function BetterLightFX:DoesEventExist(name)
 end
 
 function BetterLightFX:StartEvent(name)
-    --BetterLightFX:PrintDebug("[BetterLightFX] Starting event, " .. name)
+    --BetterLightFX:PrintDebug("[BetterLightFX] Starting event, " .. name, BetterLightFX.LOG_LEVEL_DEBUG)
     if not self:DoesEventExist(name) then
         return
     end
@@ -343,11 +360,11 @@ function BetterLightFX:StartEvent(name)
         self._current_event = name
         self.events[name]._ran_once = false
     end
-    --BetterLightFX:PrintDebug("[BetterLightFX] Event started, " .. name)
+    --BetterLightFX:PrintDebug("[BetterLightFX] Event started, " .. name, BetterLightFX.LOG_LEVEL_DEBUG)
 end
 
 function BetterLightFX:EndEvent(name)
-    --BetterLightFX:PrintDebug("[BetterLightFX] Ending event, " .. name)
+    --BetterLightFX:PrintDebug("[BetterLightFX] Ending event, " .. name, BetterLightFX.LOG_LEVEL_DEBUG)
     
     if not self:DoesEventExist(name) then
         return
@@ -360,11 +377,11 @@ function BetterLightFX:EndEvent(name)
         end
     end
     
-    --BetterLightFX:PrintDebug("[BetterLightFX] Event ended, " .. name)
+    --BetterLightFX:PrintDebug("[BetterLightFX] Event ended, " .. name, BetterLightFX.LOG_LEVEL_DEBUG)
 end
 
 function BetterLightFX:UpdateEvent(name, parameters)
-     BetterLightFX:PrintDebug("[BetterLightFX] Updating event, " .. name)
+     BetterLightFX:PrintDebug("[BetterLightFX] Updating event, " .. name, BetterLightFX.LOG_LEVEL_DEBUG)
     if not self:DoesEventExist(name) then
         return
     end
@@ -373,26 +390,7 @@ function BetterLightFX:UpdateEvent(name, parameters)
         self.events[name][parameter] = value
     end
     
-     --BetterLightFX:PrintDebug("[BetterLightFX] Event updated, " .. name)
-end
-
-
-
-function BetterLightFX:PrintDebug(message)
-    if BetterLightFX.debug_enabled then
-        
-        if BetterLightFX.debug_systemprint and managers and managers.chat then
-            managers.chat:_receive_message(ChatManager.GAME, "BetterLightFX", message, tweak_data.system_chat_color)
-        else
-            log(message)
-        end
-    end
-end
-
-function BetterLightFX:PrintDebugElapsed(elapsedtime, message)
-    if elapsedtime > 0.05 then
-        BetterLightFX:PrintDebug(message .. " took " .. string.format("%.2f", elapsedtime) .. " seconds.")
-    end
+     --BetterLightFX:PrintDebug("[BetterLightFX] Event updated, " .. name, BetterLightFX.LOG_LEVEL_DEBUG)
 end
 
 function BetterLightFX:PushColor(color, event)
@@ -458,16 +456,10 @@ function BetterLightFX:PushColor(color, event)
         BetterLightFX.is_setting_color = false
     end
     
-    BetterLightFX:PrintDebugElapsed(os.clock() - debug_clockstart, "BetterLightFX:PushColor") --DEBUG
+    BetterLightFX:PrintDebugElapsed(os.clock() - debug_clockstart, "BetterLightFX:PushColor", BetterLightFX.LOG_LEVEL_WARNING) --DEBUG
 end
 
 function BetterLightFX:SetColor(red, green, blue, alpha, event)
-    if state then
-        --BetterLightFX:PrintDebug("State setting color: ".. state)
-    else
-        --BetterLightFX:PrintDebug("State setting color: nil")
-    end
-    --BetterLightFX:PrintDebug("Set new color: r="..color.red.." g="..color.green.." b="..color.blue.." a="..color.alpha)
     BetterLightFX:PushColor(Color(alpha, red, green, blue), event)
 end
 
@@ -839,4 +831,41 @@ if Hooks then
 
 end
 
+function BetterLightFX:DebugLevelString(level)
+    if level == BetterLightFX.LOG_LEVEL_INFO then
+        return "INFO"
+    elseif level == BetterLightFX.LOG_LEVEL_WARNING then
+        return "WARNING"
+    elseif level == BetterLightFX.LOG_LEVEL_DEBUG then
+        return "DEBUG"
+    else
+        return nil
+    end
+end
 
+
+function BetterLightFX:PrintDebug(message, level)
+    if BetterLightFX.debug_enabled then
+        if level >= BetterLightFX.debug_level then
+            
+            local levelstr = BetterLightFX:DebugLevelString(level)
+            if levelstr then
+                levelstr = "[" .. levelstr .. "] "
+            else
+                levelstr = ""
+            end
+            
+            if BetterLightFX.debug_systemprint and managers and managers.chat then
+                managers.chat:_receive_message(ChatManager.GAME, "BetterLightFX",  levelstr .. message, tweak_data.system_chat_color)
+            else
+                log(levelstr .. message)
+            end
+        end
+    end
+end
+
+function BetterLightFX:PrintDebugElapsed(elapsedtime, message, level)
+    if elapsedtime > 0.05 then
+        BetterLightFX:PrintDebug(message .. " took " .. string.format("%.2f", elapsedtime) .. " seconds.", level)
+    end
+end
