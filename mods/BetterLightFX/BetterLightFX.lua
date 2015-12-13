@@ -686,7 +686,7 @@ if Hooks then
         })
     
         MenuCallbackHandler.blfx_createEventModMenuItems = function(this, item)
-            BetterLightFX.currentEvent = item:name() == (BetterLightFX.name .. "events") and item:value() or 1
+            BetterLightFX.currentEvent = item:name() == (BetterLightFX.name .. "events") and item:value() or BetterLightFX.currentEvent or 1
             local node = nodes[BetterLightFX.menuEventOptions]
             
             node:set_items({
@@ -694,15 +694,6 @@ if Hooks then
                 node:item("EventDivider")
             })
             
-            --[[
-            for _, item in pairs(node:items()) do
-                log(item:parameters().name)
-                if not item:parameters().back and item:parameters().name ~= "EventDivider" and item:parameters().name ~= BetterLightFX.name .. "events" then
-                    node:delete_item(item:parameters().name)
-                end
-            end
-            ]]
-
             local eventData = BetterLightFX.EventModOptions[BetterLightFX.currentEvent]
             
             if eventData and eventData.options then
@@ -721,7 +712,10 @@ if Hooks then
             
             managers.menu:add_back_button(node)
             
-            managers.menu:active_menu().logic:_refresh_node()
+            managers.menu:active_menu().renderer:refresh_node(node)
+            local selected_item = node:selected_item()
+            node:select_item(selected_item and selected_item:name())
+            managers.menu:active_menu().renderer:highlight_item(selected_item)
         end
         
         if #BetterLightFX.EventModOptions > 0 then
