@@ -11,7 +11,6 @@ if not _G.BetterLightFX then
     
     BetterLightFX.current_color = Color.White
     BetterLightFX._current_event = nil
-    BetterLightFX._current_event_routine = nil
     BetterLightFX.is_setting_color = false
     BetterLightFX._last_light_set_at = 0
     BetterLightFX.min_wait_time = 0.01
@@ -37,6 +36,7 @@ if not _G.BetterLightFX then
         ["lib/states/missionendstate"] = "MissionEndState.lua",
         ["lib/managers/hud/hudassaultcorner"] = "HUDAssaultCorner.lua",
         ["lib/managers/hud/hudobjectives"] = "HUDObjectives.lua",
+        ["lib/managers/hudmanagerpd2"] = "HUDManagerPD2.lua",
     }
     
     BetterLightFX.LUA = {
@@ -73,6 +73,112 @@ function BetterLightFX:Initialize()
     BetterLightFX:Processor()
 end
 
+function BetterLightFX:InitEvents()
+    
+    BetterLightFX:RegisterEvent("Suspicion", {priority = 1, enabled = true, loop = false, _color = Color(1, 1, 1, 1), 
+        options = {
+            enabled = {typ = "bool", localization = "Enabled"}
+        },
+        run = function(self, ...)
+            self._ran_once = true
+        end})
+    BetterLightFX:RegisterEvent("AssaultIndicator", {priority = 2, enabled = true, loop = true, _color = Color(1, 1, 1, 1), _t = 3, 
+        options = {
+            enabled = {typ = "bool", localization = "Enabled"}
+        },
+        run = function(self, ...)
+            local dt = coroutine.yield()
+            self._t = self._t - dt
+            local cv = math.abs((math.sin(self._t * 180 * 1)))
+            local color2set = Color(1, self._color.red * cv, self._color.green * cv, self._color.blue * cv)
+            
+            BetterLightFX:SetColor(color2set.red, color2set.green, color2set.blue, color2set.alpha, self.name)
+            self._ran_once = true
+        end})
+    BetterLightFX:RegisterEvent("PointOfNoReturn", {priority = 3, enabled = true, loop = false, _color = Color(1, 1, 1, 1), 
+        options = {
+            enabled = {typ = "bool", localization = "Enabled"}
+        }, 
+        run = function(self, ...) self._ran_once = true end})
+    BetterLightFX:RegisterEvent("Bleedout", {priority = 4, enabled = true, loop = true, _color = Color(1, 1, 1, 1),  _progress = 0, 
+        options = {
+            enabled = {typ = "bool", localization = "Enabled"}, 
+            _color = {typ = "color", localization = "Color"}
+        },
+        run = function(self, ...)
+            BetterLightFX:SetColor(self._color.red, self._color.green, self._color.blue, self._progress, self.name)
+            coroutine.yield()
+            self._ran_once = true
+        end})
+    BetterLightFX:RegisterEvent("SwanSong", {priority = 5, enabled = true, loop = true, _color = Color(1, 0, 0.80, 1),  _t = 3, _frequency = 2,
+        options = {
+            enabled = {typ = "bool", localization = "Enabled"}, 
+            _color = {typ = "color", localization = "Color"},
+            _frequency = {typ = "number", localization = "Blinking Frequency", minVal = 0, maxVal = 30},
+            
+        },
+        run = function(self, ...)
+            local dt = coroutine.yield()
+            self._t = self._t - dt
+            local cv = math.abs((math.sin(self._t * 90 * self._frequency * 1)))
+            local color2set = Color(1, self._color.red * cv, self._color.green * cv, self._color.blue * cv)
+            
+            BetterLightFX:SetColor(color2set.red, color2set.green, color2set.blue, color2set.alpha, self.name)
+            self._ran_once = true
+        end})
+    BetterLightFX:RegisterEvent("EndLoss", {priority = 6, enabled = true, loop = true, 
+        options = {
+            enabled = {typ = "bool", localization = "Enabled"}
+        }, 
+        run = function(self, ...)
+            while true do
+                BetterLightFX:SetColor(0, 0, 1, 1, self.name)
+                BetterLightFX:wait(0.125)
+                BetterLightFX:SetColor(0, 0, 1, 0, self.name)
+                BetterLightFX:wait(0.125)
+                BetterLightFX:SetColor(0, 0, 1, 1, self.name)
+                BetterLightFX:wait(0.125)
+                BetterLightFX:SetColor(0, 0, 1, 0, self.name)
+                BetterLightFX:wait(0.25)
+                
+                BetterLightFX:SetColor(1, 0, 0, 1, self.name)
+                BetterLightFX:wait(0.125)
+                BetterLightFX:SetColor(1, 0, 0, 0, self.name)
+                BetterLightFX:wait(0.125)
+                BetterLightFX:SetColor(1, 0, 0, 1, self.name)
+                BetterLightFX:wait(0.125)
+                BetterLightFX:SetColor(1, 0, 0, 0, self.name)
+                BetterLightFX:wait(0.25)
+                
+                self._ran_once = true
+            end
+        end})
+        
+    BetterLightFX:RegisterEvent("SafeDrilled", {priority = 7, enabled = true, loop = false, _color = Color(1, 1, 1, 1), _duration = 5,
+        options = {
+            enabled = {typ = "bool", localization = "Enabled"},
+            _duration = {typ = "number", localization = "Light Duration (Seconds)", maxVal = 30}
+        }, 
+        run = function(self, ...)
+            
+            --Fade in
+            for glow_count = 0, 1, 0.05 do
+                BetterLightFX:SetColor(self._color.red, self._color.green, self._color.blue, glow_count, self.name)
+                coroutine.yield()
+            end
+            
+            BetterLightFX:wait(self._duration)
+            
+            --Fade out
+            for glow_count = 1, 0, -0.05 do
+                BetterLightFX:SetColor(self._color.red, self._color.green, self._color.blue, glow_count, self.name)
+                coroutine.yield()
+            end
+            
+            self._ran_once = true
+        end})
+end
+
 function BetterLightFX:Processor()
     if not self._initialized then
         return
@@ -82,17 +188,22 @@ function BetterLightFX:Processor()
     
     Hooks:Add("MenuUpdate", "MenuUpdate_BetterLightFX", function( t, dt )
         if BetterLightFX.routine and coroutine.status(BetterLightFX.routine) ~= "dead" then
-            local success, errorMessage = coroutine.resume(BetterLightFX.routine, dt)
-            
-            if not success then -- check if there is an error
-                log("There was an error in main: ", errorMessage)
+            if coroutine.status(BetterLightFX.routine) == "suspended" then
+                local success, errorMessage = coroutine.resume(BetterLightFX.routine, dt)
+                
+                if not success then -- check if there is an error
+                    log("There was an error in main: " .. errorMessage)
+                end
             end
         elseif not BetterLightFX.routine or coroutine.status(BetterLightFX.routine) == "dead" then
             BetterLightFX:CreateCoroutine()
-            local success, errorMessage = coroutine.resume(BetterLightFX.routine, dt)
             
-            if not success then -- check if there is an error
-                log("There was an error in main: ", errorMessage)
+            if coroutine.status(BetterLightFX.routine) == "suspended" then
+                local success, errorMessage = coroutine.resume(BetterLightFX.routine, dt)
+                
+                if not success then -- check if there is an error
+                    log("There was an error in main: " .. errorMessage)
+                end
             end
         end
         --BetterLightFX:PrintDebug("Status of self.routine " .. coroutine.status(BetterLightFX.routine))
@@ -100,17 +211,22 @@ function BetterLightFX:Processor()
 
     Hooks:Add("GameSetupUpdate", "GameSetupUpdate_BetterLightFX", function( t, dt )
         if BetterLightFX.routine and coroutine.status(BetterLightFX.routine) ~= "dead" then
-            local success, errorMessage = coroutine.resume(BetterLightFX.routine, dt)
-            
-            if not success then -- check if there is an error
-                log("There was an error in main: ", errorMessage)
+            if coroutine.status(BetterLightFX.routine) == "suspended" then
+                local success, errorMessage = coroutine.resume(BetterLightFX.routine, dt)
+                
+                if not success then -- check if there is an error
+                    log("There was an error in main: " .. errorMessage)
+                end
             end
         elseif not BetterLightFX.routine or coroutine.status(BetterLightFX.routine) == "dead" then
             BetterLightFX:CreateCoroutine()
-            local success, errorMessage = coroutine.resume(BetterLightFX.routine, dt)
             
-            if not success then -- check if there is an error
-                log("There was an error in main: ", errorMessage)
+            if coroutine.status(BetterLightFX.routine) == "suspended" then
+                local success, errorMessage = coroutine.resume(BetterLightFX.routine, dt)
+                
+                if not success then -- check if there is an error
+                    log("There was an error in main: " .. errorMessage)
+                end
             end
         end
         --BetterLightFX:PrintDebug("Status of self.routine " .. coroutine.status(BetterLightFX.routine))
@@ -124,30 +240,13 @@ function BetterLightFX:CreateCoroutine()
                 if self.events[self._current_event] then
                     --BetterLightFX:PrintDebug("Attempting to run " .. self._current_event)
                     
-                     if self.events[self._current_event].loop then
-                     
-                        if not BetterLightFX._current_event_routine or coroutine.status(BetterLightFX._current_event_routine) == "dead" then
-                            BetterLightFX._current_event_routine = coroutine.wrap(self.events[self._current_event]:run())
-                        end
-                        local success, errorMessage = coroutine.resume(BetterLightFX._current_event_routine, dt)
-                        
-                        if not success then -- check if there is an error
-                            log("There was an error: ", errorMessage)
-                        end
-                        
-                     else
-                     
+                        if self.events[self._current_event].loop then
+                            self.events[self._current_event]:run()
+                        else
+
                         if not self.events[self._current_event]._ran_once then
-                            if not BetterLightFX._current_event_routine or coroutine.status(BetterLightFX._current_event_routine) == "dead" then
-                                BetterLightFX._current_event_routine = coroutine.wrap(self.events[self._current_event]:run())
-                            end
-                            local success, errorMessage = coroutine.resume(BetterLightFX._current_event_routine, dt)
-                        
-                            if not success then -- check if there is an error
-                                log("There was an error: ", errorMessage)
-                            end
+                            self.events[self._current_event]:run()
                         end
-                        
                     end
                     
                 end
@@ -175,6 +274,7 @@ function BetterLightFX:RegisterEvent(name, parameters, override)
     self.events[name] = parameters
     self.events[name].name = name
     self.events[name].enabled = true
+    
     
     if parameters.options then
         table.insert(BetterLightFX.EventModOptions, {
@@ -223,17 +323,19 @@ function BetterLightFX:StartEvent(name)
         return
     end
     
+    if not self.events[name].enabled then
+        return
+    end
+    
     if self._current_event and self._current_event == name then
         return
     end
      
     if self._current_event and self.events[self._current_event].priority < self.events[name].priority then
         self._current_event = name
-        BetterLightFX._current_event_routine = nil
         self.events[name]._ran_once = false
     elseif not self._current_event then
         self._current_event = name
-        BetterLightFX._current_event_routine = nil
         self.events[name]._ran_once = false
     end
     --BetterLightFX:PrintDebug("[BetterLightFX] Event started, " .. name)
@@ -266,7 +368,7 @@ function BetterLightFX:UpdateEvent(name, parameters)
         self.events[name][parameter] = value
     end
     
-     BetterLightFX:PrintDebug("[BetterLightFX] Event updated, " .. name)
+     --BetterLightFX:PrintDebug("[BetterLightFX] Event updated, " .. name)
 end
 
 
@@ -417,7 +519,7 @@ function BetterLightFX:CreateNumberOption(node, params)
 
     local itemparams = {
         name = params.event .. "|" .. params.param,
-        text_id = params.localization .. "(" .. color .. ")",
+        text_id = params.localization,
         callback = params.callback or "blfx_EventNumberCallback",
         disabled_color = Color( 0.25, 1, 1, 1 ),
         localize = false,
@@ -469,82 +571,13 @@ function BetterLightFX:CreateBoolOption(node, params)
 		disabled_color = Color( 0.25, 1, 1, 1 ),
 		icon_by_text = false,
 		localize = false,
+        eventParams = params
 	}
 
 	local item = node:create_item( data, itemparams )
 	item:set_value( params.value and "on" or "off" )
     node:add_item(item)
     item.dirty_callback = nil
-end
-
-function BetterLightFX:InitEvents()
-    
-    BetterLightFX:RegisterEvent("Suspicion", {priority = 1, loop = false, _color = Color(1, 1, 1, 1), options = {_color = {typ = "color", localization = "Color"}},
-        run = function(self, ...)
-            self._ran_once = true
-        end})
-    BetterLightFX:RegisterEvent("AssaultIndicator", {priority = 2, loop = true, _color = Color(1, 1, 1, 1), _t = 3,
-        run = function(self, ...)
-            local dt = coroutine.yield()
-            self._t = self._t - dt
-            local cv = math.abs((math.sin(self._t * 180 * 1)))
-            local color2set = Color(1, self._color.red * cv, self._color.green * cv, self._color.blue * cv)
-            
-            BetterLightFX:SetColor(color2set.red, color2set.green, color2set.blue, color2set.alpha, "AssaultIndicator")
-            self._ran_once = true
-           
-        end})
-    BetterLightFX:RegisterEvent("PointOfNoReturn", {priority = 3, loop = false, _color = Color(1, 1, 1, 1), options = {_color = {typ = "color", localization = "Color"}}, run = function(self, ...) self._ran_once = true end})
-    BetterLightFX:RegisterEvent("Bleedout", {priority = 4, loop = true, _progress = 0,
-        run = function(self, ...)
-            BetterLightFX:SetColor(1, 1, 1, self._progress, "Bleedout")
-            coroutine.yield()
-            self._ran_once = true
-        end})
-    BetterLightFX:RegisterEvent("EndLoss", {priority = 5, loop = true, 
-        run = function(self, ...)
-            while true do
-                BetterLightFX:SetColor(0, 0, 1, 1, "EndLoss")
-                BetterLightFX:wait(0.125)
-                BetterLightFX:SetColor(0, 0, 1, 0, "EndLoss")
-                BetterLightFX:wait(0.125)
-                BetterLightFX:SetColor(0, 0, 1, 1, "EndLoss")
-                BetterLightFX:wait(0.125)
-                BetterLightFX:SetColor(0, 0, 1, 0, "EndLoss")
-                BetterLightFX:wait(0.25)
-                
-                BetterLightFX:SetColor(1, 0, 0, 1, "EndLoss")
-                BetterLightFX:wait(0.125)
-                BetterLightFX:SetColor(1, 0, 0, 0, "EndLoss")
-                BetterLightFX:wait(0.125)
-                BetterLightFX:SetColor(1, 0, 0, 1, "EndLoss")
-                BetterLightFX:wait(0.125)
-                BetterLightFX:SetColor(1, 0, 0, 0, "EndLoss")
-                BetterLightFX:wait(0.25)
-                
-                self._ran_once = true
-            end
-        end})
-        
-    BetterLightFX:RegisterEvent("SafeDrilled", {priority = 6, loop = false, _color = Color(1, 1, 1, 1),
-        run = function(self, ...)
-            
-            --Fade in
-            for glow_count = 0, 1, 0.05 do
-                BetterLightFX:SetColor(self._color.red, self._color.green, self._color.blue, glow_count, "SafeDrilled")
-                coroutine.yield()
-            end
-            
-            BetterLightFX:wait(5)
-            
-            --Fade out
-            for glow_count = 1, 0, -0.05 do
-                BetterLightFX:SetColor(self._color.red, self._color.green, self._color.blue, glow_count, "SafeDrilled")
-                coroutine.yield()
-            end
-            
-            self._ran_once = true
-        end})
 end
     
 if not BetterLightFX.init then
@@ -578,8 +611,13 @@ if Hooks then
 			[BetterLightFX.name .. "modEvents_desc"] = "",
             [BetterLightFX.name .. "events_title"] = "Event",
 			[BetterLightFX.name .. "events_desc"] = "",
-			["BLFXevent_PointOfNoReturn"] = "Point Of No Return",
-			["BLFXevent_Suspicion"] = "Suspicion",
+            ["BLFXevent_Suspicion"] = "Suspicion",
+			["BLFXevent_AssaultIndicator"] = "Assault Indicator",
+            ["BLFXevent_PointOfNoReturn"] = "Point Of No Return",
+            ["BLFXevent_Bleedout"] = "Bleedout",
+            ["BLFXevent_SwanSong"] = "Swan Song",
+            ["BLFXevent_EndLoss"] = "Game Over",
+            ["BLFXevent_SafeDrilled"] = "Safe Drilled",
             
 		})
         
@@ -656,13 +694,15 @@ if Hooks then
                 node:item("EventDivider")
             })
             
-            --[[for _, item in pairs(node:items()) do
+            --[[
+            for _, item in pairs(node:items()) do
                 log(item:parameters().name)
-                --if not item:parameters().back and item:parameters().name ~= "EventDivider" and item:parameters().name ~= BetterLightFX.name .. "events" then
+                if not item:parameters().back and item:parameters().name ~= "EventDivider" and item:parameters().name ~= BetterLightFX.name .. "events" then
                     node:delete_item(item:parameters().name)
-                --end
-            end]]--
-            
+                end
+            end
+            ]]
+
             local eventData = BetterLightFX.EventModOptions[BetterLightFX.currentEvent]
             
             if eventData and eventData.options then
@@ -673,8 +713,8 @@ if Hooks then
                         value = BetterLightFX:GetEventParamaterValue(eventData.event_name, param),
                         param = param, 
                         localization = opt.localization,
-                        valMin = opt.minVal,
-                        valMax = opt.maxVal
+                        valMin = opt.minVal or 0,
+                        valMax = opt.maxVal or 0
                     })
                 end
             end
