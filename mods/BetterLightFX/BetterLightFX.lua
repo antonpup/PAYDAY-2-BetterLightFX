@@ -183,6 +183,19 @@ function BetterLightFX:RegisterEvent(name, parameters, override)
         })
     end
     
+    if self.Options[name] then
+        for param, data in pairs(self.Options[name]) do
+            if type(data) == "table" then
+                self.events[name][param] = self.events[name][param] or Color.white
+                for color, value in pairs(data) do
+                    self.events[name][param][color] = value
+                end
+            else
+                self.events[name][param] = data
+            end
+        end
+    end
+    
     BetterLightFX:PrintDebug("[BetterLightFX] Registered event " .. name)
 end
 
@@ -190,7 +203,7 @@ function BetterLightFX:GetEventParamaterValue(name, param)
     if not self:DoesEventExist(name) then
         return
     end
-
+    
     return self.events[name][param]
 end
 
@@ -368,8 +381,7 @@ end
 function BetterLightFX:CreateColorOption(node, params)
     local colors = {"red", "green", "blue"}
     
-    for i, color in pairs(colors) do
-        log("create color")    
+    for i, color in pairs(colors) do  
         local data = {
             type = "CoreMenuItemSlider.ItemSlider",
             min = 0,
@@ -390,25 +402,88 @@ function BetterLightFX:CreateColorOption(node, params)
         local item = node:create_item(data, itemparams)
         item:set_value( params.value[color] * 255 )
         node:add_item(item)
-        
+        item.dirty_callback = nil
     end
 end
 
 function BetterLightFX:CreateNumberOption(node, params)
+    local data = {
+        type = "CoreMenuItemSlider.ItemSlider",
+        min = params.valMin or 0,
+        max = params.valMax or 200,
+        step = 0.5,
+        show_value = true
+    }
 
+    local itemparams = {
+        name = params.event .. "|" .. params.param,
+        text_id = params.localization .. "(" .. color .. ")",
+        callback = params.callback or "blfx_EventNumberCallback",
+        disabled_color = Color( 0.25, 1, 1, 1 ),
+        localize = false,
+        eventParams = params
+    }
+    local item = node:create_item(data, itemparams)
+    item:set_value(params.value)
+    node:add_item(item)
+    item.dirty_callback = nil
 end
 
 function BetterLightFX:CreateBoolOption(node, params)
+    local data = {
+		type = "CoreMenuItemToggle.ItemToggle",
+		{
+			_meta = "option",
+			icon = "guis/textures/menu_tickbox",
+			value = "on",
+			x = 24,
+			y = 0,
+			w = 24,
+			h = 24,
+			s_icon = "guis/textures/menu_tickbox",
+			s_x = 24,
+			s_y = 24,
+			s_w = 24,
+			s_h = 24
+		},
+		{
+			_meta = "option",
+			icon = "guis/textures/menu_tickbox",
+			value = "off",
+			x = 0,
+			y = 0,
+			w = 24,
+			h = 24,
+			s_icon = "guis/textures/menu_tickbox",
+			s_x = 0,
+			s_y = 24,
+			s_w = 24,
+			s_h = 24
+		}
+	}
 
+	local itemparams = {
+		name = params.event .. "|" .. params.param,
+		text_id = params.localization,
+		callback = params.callback or "blfx_EventBoolCallback",
+		disabled_color = Color( 0.25, 1, 1, 1 ),
+		icon_by_text = false,
+		localize = false,
+	}
+
+	local item = node:create_item( data, itemparams )
+	item:set_value( params.value and "on" or "off" )
+    node:add_item(item)
+    item.dirty_callback = nil
 end
 
 function BetterLightFX:InitEvents()
     
-    BetterLightFX:RegisterEvent("Suspicion", {priority = 1, loop = false, _color = Color.white,
+    BetterLightFX:RegisterEvent("Suspicion", {priority = 1, loop = false, _color = Color(1, 1, 1, 1), options = {_color = {typ = "color", localization = "Color"}},
         run = function(self, ...)
             self._ran_once = true
         end})
-    BetterLightFX:RegisterEvent("AssaultIndicator", {priority = 2, loop = true, _color = Color.white, _t = 3, 
+    BetterLightFX:RegisterEvent("AssaultIndicator", {priority = 2, loop = true, _color = Color(1, 1, 1, 1), _t = 3,
         run = function(self, ...)
             local dt = coroutine.yield()
             self._t = self._t - dt
@@ -416,10 +491,10 @@ function BetterLightFX:InitEvents()
             local color2set = Color(1, self._color.red * cv, self._color.green * cv, self._color.blue * cv)
             
             BetterLightFX:SetColor(color2set.red, color2set.green, color2set.blue, color2set.alpha, "AssaultIndicator")
-             self._ran_once = true
+            self._ran_once = true
            
         end})
-    BetterLightFX:RegisterEvent("PointOfNoReturn", {priority = 3, loop = false, _color = Color.white, options = {_color = {typ = "color", localization = "Color"}}, run = function(self, ...) self._ran_once = true end})
+    BetterLightFX:RegisterEvent("PointOfNoReturn", {priority = 3, loop = false, _color = Color(1, 1, 1, 1), options = {_color = {typ = "color", localization = "Color"}}, run = function(self, ...) self._ran_once = true end})
     BetterLightFX:RegisterEvent("Bleedout", {priority = 4, loop = true, _progress = 0,
         run = function(self, ...)
             BetterLightFX:SetColor(1, 1, 1, self._progress, "Bleedout")
@@ -451,7 +526,7 @@ function BetterLightFX:InitEvents()
             end
         end})
         
-    BetterLightFX:RegisterEvent("SafeDrilled", {priority = 6, loop = false, _color = Color.white,
+    BetterLightFX:RegisterEvent("SafeDrilled", {priority = 6, loop = false, _color = Color(1, 1, 1, 1),
         run = function(self, ...)
             
             --Fade in
@@ -504,6 +579,7 @@ if Hooks then
             [BetterLightFX.name .. "events_title"] = "Event",
 			[BetterLightFX.name .. "events_desc"] = "",
 			["BLFXevent_PointOfNoReturn"] = "Point Of No Return",
+			["BLFXevent_Suspicion"] = "Suspicion",
             
 		})
         
@@ -573,27 +649,39 @@ if Hooks then
     
         MenuCallbackHandler.blfx_createEventModMenuItems = function(this, item)
             BetterLightFX.currentEvent = item:name() == (BetterLightFX.name .. "events") and item:value() or 1
-            
             local node = nodes[BetterLightFX.menuEventOptions]
             
-            for i = 2, #node._items do
-                node:delete_item(node._items[i])
-            end
+            node:set_items({
+                node:item(BetterLightFX.name .. "events"),
+                node:item("EventDivider")
+            })
+            
+            --[[for _, item in pairs(node:items()) do
+                log(item:parameters().name)
+                --if not item:parameters().back and item:parameters().name ~= "EventDivider" and item:parameters().name ~= BetterLightFX.name .. "events" then
+                    node:delete_item(item:parameters().name)
+                --end
+            end]]--
             
             local eventData = BetterLightFX.EventModOptions[BetterLightFX.currentEvent]
             
             if eventData and eventData.options then
                 for param, opt in pairs(eventData.options) do 
-                    log(param)
                     BetterLightFX:CreateEventOptionButton(node, {
                         event = eventData.event_name, 
                         typ = opt.typ, 
                         value = BetterLightFX:GetEventParamaterValue(eventData.event_name, param),
                         param = param, 
-                        localization = opt.localization
+                        localization = opt.localization,
+                        valMin = opt.minVal,
+                        valMax = opt.maxVal
                     })
                 end
             end
+            
+            managers.menu:add_back_button(node)
+            
+            managers.menu:active_menu().logic:_refresh_node()
         end
         
         if #BetterLightFX.EventModOptions > 0 then
@@ -636,7 +724,37 @@ if Hooks then
             local param = item:parameters().eventParams.param
             local color = item:parameters().colorType
             
+            BetterLightFX.Options[event] = BetterLightFX.Options[event] or {}
+            BetterLightFX.Options[event][param] = BetterLightFX.Options[event][param] or {}
+            BetterLightFX.Options[event][param][color] = item:value() / 255
+            
+            BetterLightFX:Save()
+            
             BetterLightFX.events[event][param][color] = item:value() / 255
+        end
+        
+        MenuCallbackHandler.blfx_EventNumberCallback = function(this, item)
+            local event = item:parameters().eventParams.event
+            local param = item:parameters().eventParams.param
+            
+            BetterLightFX.Options[event] = BetterLightFX.Options[event] or {}
+            BetterLightFX.Options[event][param] = item:value()
+            
+            BetterLightFX:Save()
+            
+            BetterLightFX.events[event][param] = item:value()
+        end
+        
+        MenuCallbackHandler.blfx_EventBoolCallback = function(this, item)
+            local event = item:parameters().eventParams.event
+            local param = item:parameters().eventParams.param
+            
+            BetterLightFX.Options[event] = BetterLightFX.Options[event] or {}
+            BetterLightFX.Options[event][param] = item:value() == "on" and true or false
+            
+            BetterLightFX:Save()
+            
+            BetterLightFX.events[event][param] = item:value() == "on" and true or false
         end
         
     end)
