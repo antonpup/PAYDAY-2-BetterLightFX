@@ -648,6 +648,8 @@ if Hooks then
         MenuHelper:NewMenu(BetterLightFX.menuEventOptions)
     end)
     
+    Hooks:RegisterHook(BetterLightFX.name .. "CreateEvents")
+    
     Hooks:Add("MenuManagerPopulateCustomMenus", "Base_Populate" .. BetterLightFX.name .. "Menus", function( menu_manager, nodes )
         --Add buttons
         
@@ -751,6 +753,8 @@ if Hooks then
             selected_node:select_item(selected_item and selected_item:name())
             managers.menu:active_menu().renderer:highlight_item(selected_item)
         end
+        
+        Hooks:Call(BetterLightFX.name .. "CreateEvents", BetterLightFX)
         
         if #BetterLightFX.EventModOptions > 0 then
             MenuHelper:AddButton({
