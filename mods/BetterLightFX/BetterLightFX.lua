@@ -60,6 +60,45 @@ if not _G.BetterLightFX then
     BetterLightFX.EventModOptions = {}
 end
 
+function BetterLightFX:DebugLevelString(level)
+    if level == BetterLightFX.LOG_LEVEL_INFO then
+        return "INFO"
+    elseif level == BetterLightFX.LOG_LEVEL_WARNING then
+        return "WARNING"
+    elseif level == BetterLightFX.LOG_LEVEL_DEBUG then
+        return "DEBUG"
+    else
+        return nil
+    end
+end
+
+
+function BetterLightFX:PrintDebug(message, level)
+    if BetterLightFX.debug_enabled then
+        if level <= BetterLightFX.debug_level then
+            
+            local levelstr = BetterLightFX:DebugLevelString(level)
+            if levelstr then
+                levelstr = "[" .. levelstr .. "] "
+            else
+                levelstr = ""
+            end
+            
+            if BetterLightFX.debug_systemprint and managers and managers.chat then
+                managers.chat:_receive_message(ChatManager.GAME, "BetterLightFX",  levelstr .. message, tweak_data.system_chat_color)
+            else
+                log(levelstr .. message)
+            end
+        end
+    end
+end
+
+function BetterLightFX:PrintDebugElapsed(elapsedtime, message, level)
+    if elapsedtime > 0.05 then
+        BetterLightFX:PrintDebug(message .. " took " .. string.format("%.2f", elapsedtime) .. " seconds.", level)
+    end
+end
+
 function BetterLightFX:Initialize()
     if self._initialized then
         return
@@ -623,6 +662,7 @@ if Hooks then
             ["BLFXevent_PointOfNoReturn"] = "Point Of No Return",
             ["BLFXevent_Bleedout"] = "Bleedout",
             ["BLFXevent_SwanSong"] = "Swan Song",
+            ["BLFXevent_Flashbang"] = "Flashbang",
             ["BLFXevent_EndLoss"] = "Game Over",
             ["BLFXevent_SafeDrilled"] = "Safe Drilled",
             
@@ -829,43 +869,4 @@ if Hooks then
         nodes[BetterLightFX.menuEventOptions] = MenuHelper:BuildMenu(BetterLightFX.menuEventOptions)
     end)
 
-end
-
-function BetterLightFX:DebugLevelString(level)
-    if level == BetterLightFX.LOG_LEVEL_INFO then
-        return "INFO"
-    elseif level == BetterLightFX.LOG_LEVEL_WARNING then
-        return "WARNING"
-    elseif level == BetterLightFX.LOG_LEVEL_DEBUG then
-        return "DEBUG"
-    else
-        return nil
-    end
-end
-
-
-function BetterLightFX:PrintDebug(message, level)
-    if BetterLightFX.debug_enabled then
-        if level >= BetterLightFX.debug_level then
-            
-            local levelstr = BetterLightFX:DebugLevelString(level)
-            if levelstr then
-                levelstr = "[" .. levelstr .. "] "
-            else
-                levelstr = ""
-            end
-            
-            if BetterLightFX.debug_systemprint and managers and managers.chat then
-                managers.chat:_receive_message(ChatManager.GAME, "BetterLightFX",  levelstr .. message, tweak_data.system_chat_color)
-            else
-                log(levelstr .. message)
-            end
-        end
-    end
-end
-
-function BetterLightFX:PrintDebugElapsed(elapsedtime, message, level)
-    if elapsedtime > 0.05 then
-        BetterLightFX:PrintDebug(message .. " took " .. string.format("%.2f", elapsedtime) .. " seconds.", level)
-    end
 end
