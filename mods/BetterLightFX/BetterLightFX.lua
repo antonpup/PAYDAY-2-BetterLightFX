@@ -275,6 +275,11 @@ function BetterLightFX:RegisterEvent(name, parameters, override)
     self.events[name].name = name
     self.events[name].enabled = true
     
+    for i, eventOpt in pairs(BetterLightFX.EventModOptions) do
+        if eventOpt.event_name == name then
+            table.remove(BetterLightFX.EventModOptions, i)
+        end
+    end
     
     if parameters.options then
         table.insert(BetterLightFX.EventModOptions, {
@@ -740,9 +745,10 @@ if Hooks then
             
             managers.menu:add_back_button(node)
             
-            managers.menu:active_menu().renderer:refresh_node(node)
-            local selected_item = node:selected_item()
-            node:select_item(selected_item and selected_item:name())
+            local selected_node = managers.menu:active_menu().logic:selected_node()
+            managers.menu:active_menu().renderer:refresh_node(selected_node)
+            local selected_item = selected_node:selected_item()
+            selected_node:select_item(selected_item and selected_item:name())
             managers.menu:active_menu().renderer:highlight_item(selected_item)
         end
         
