@@ -430,12 +430,20 @@ function BetterLightFX:PushColor(color, event)
     if SystemInfo:platform() == Idstring("WIN32") and managers.network.account:has_alienware() and not BetterLightFX.is_setting_color and event == BetterLightFX._current_event then
         BetterLightFX.is_setting_color = true
         --RGB to Mono
+        
+        local mono_color = ((color.red + color.green + color.blue) / 3.0 ) + BetterLightFX.Options.Monochrome_Brightness
+        if mono_color > 1 then
+            mono_color = 1
+        elseif mono_color < 0 then
+            mono_color = 0
+        end
+        
         if BetterLightFX.ColorSchemeOptions[BetterLightFX.Options.ColorScheme].name  == "RED" and color.red + color.green + color.blue > 0 then
-            BetterLightFX.current_color = Color(color.alpha, (color.red + color.green + color.blue) / 3.0 + 0.3, 0, 0) 
+            BetterLightFX.current_color = Color(color.alpha, mono_color, 0, 0) 
         elseif BetterLightFX.ColorSchemeOptions[BetterLightFX.Options.ColorScheme].name == "GREEN" then
-            BetterLightFX.current_color = Color(color.alpha, 0, (color.red + color.green + color.blue) / 3.0 + 0.3, 0) 
+            BetterLightFX.current_color = Color(color.alpha, 0, mono_color, 0) 
         elseif BetterLightFX.ColorSchemeOptions[BetterLightFX.Options.ColorScheme].name == "BLUE" then
-            BetterLightFX.current_color = Color(color.alpha, 0, 0, (color.red + color.green + color.blue) / 3.0 + 0.3)
+            BetterLightFX.current_color = Color(color.alpha, 0, 0, mono_color)
         else
             BetterLightFX.current_color = color
         end
@@ -602,15 +610,17 @@ if Hooks then
 			[BetterLightFX.name .. "MainOptionsButton"] = BetterLightFX.name .. " Options",
 			[BetterLightFX.name .. "MainOptionsButtonDescription"] = "Modify " .. BetterLightFX.name .. " options",
 			[BetterLightFX.name .."toggle_title"] = "Enabled",
-			[BetterLightFX.name .."toggle_help"] = "",
+			[BetterLightFX.name .."toggle_help"] = "Toggles the BetterLightFX",
             [BetterLightFX.name .. "color_scheme_title"] = "Color Scheme",
-			[BetterLightFX.name .. "color_scheme_desc"] = "",
+			[BetterLightFX.name .. "color_scheme_desc"] = "Allows for selection of preferred coloring, in the event that you do not have an RGB device",
+            [BetterLightFX.name .. "monochrome_brightness_title"] = "Monochrome Brightness",
+			[BetterLightFX.name .. "monochrome_brightness_desc"] = "Adjusts the brightness for monochrome color scheme",
             [BetterLightFX.name .."toggleDarkIdle_title"] = "Dark on Idle",
 			[BetterLightFX.name .. "toggleDarkIdle_desc"] = "Toggles the turning off of LED's when the keyboard is Idle",
             [BetterLightFX.name .. "modEvents_title"] = "Modify Events",
-			[BetterLightFX.name .. "modEvents_desc"] = "",
+			[BetterLightFX.name .. "modEvents_desc"] = "Change options of BetterLightFX events",
             [BetterLightFX.name .. "events_title"] = "Event",
-			[BetterLightFX.name .. "events_desc"] = "",
+			[BetterLightFX.name .. "events_desc"] = "Select an event to modify",
             ["BLFXevent_Suspicion"] = "Suspicion",
 			["BLFXevent_AssaultIndicator"] = "Assault Indicator",
             ["BLFXevent_PointOfNoReturn"] = "Point Of No Return",
@@ -674,6 +684,24 @@ if Hooks then
 			priority = 998
 		})
         
+        MenuCallbackHandler.blfx_monochrome_brightness = function(this, item)
+            BetterLightFX.Options.Monochrome_Brightness = item:value()
+            BetterLightFX:Save()
+        end
+        
+        MenuHelper:AddSlider({
+            id = BetterLightFX.name .. "monochrome_brightness",
+            title = BetterLightFX.name .. "monochrome_brightness_title",
+            desc = BetterLightFX.name .. "monochrome_brightness_desc",
+            callback = "blfx_monochrome_brightness",
+            menu_id = BetterLightFX.menuOptions,
+            value = BetterLightFX.Options.Monochrome_Brightness,
+            min = 0,
+            max = 1,
+            step = 0.01,
+            show_value = true,
+            priority = 997
+        })
         
         MenuHelper:AddToggle({
             id = "DarkIdle",
@@ -682,7 +710,7 @@ if Hooks then
 			callback = "blfx_toggleBool",
 			menu_id = BetterLightFX.menuOptions,
 			value = BetterLightFX.Options.DarkIdle,
-            priority = 997
+            priority = 996
         })
     
         MenuCallbackHandler.blfx_createEventModMenuItems = function(this, item)
@@ -726,7 +754,7 @@ if Hooks then
                 callback = "blfx_createEventModMenuItems",
                 next_node = BetterLightFX.menuEventOptions,
                 menu_id = BetterLightFX.menuOptions,
-                priority = 996
+                priority = 995
             })
             
             --Event base items
