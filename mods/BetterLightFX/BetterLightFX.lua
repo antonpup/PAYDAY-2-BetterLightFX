@@ -40,7 +40,6 @@ if not _G.BetterLightFX then
         ["lib/units/beings/player/playerdamage"] = "PlayerDamage.lua",
         ["lib/states/missionendstate"] = "MissionEndState.lua",
         ["lib/managers/hud/hudassaultcorner"] = "HUDAssaultCorner.lua",
-        ["lib/managers/hud/hudobjectives"] = "HUDObjectives.lua",
         ["lib/managers/hudmanagerpd2"] = "HUDManagerPD2.lua",
         ["core/lib/managers/coreenvironmentcontrollermanager"] = "CoreEnvironmentControllerManager.lua",
     }
@@ -127,6 +126,7 @@ function BetterLightFX:InitEvents()
         run = function(self, ...)
             self._ran_once = true
         end})
+        
     BetterLightFX:RegisterEvent("AssaultIndicator", {priority = 2, enabled = true, loop = true, _color = Color(1, 1, 1, 1), _t = 3, 
         options = {
             enabled = {typ = "bool", localization = "Enabled"}
@@ -140,11 +140,13 @@ function BetterLightFX:InitEvents()
             BetterLightFX:SetColor(color2set.red, color2set.green, color2set.blue, color2set.alpha, self.name)
             self._ran_once = true
         end})
+        
     BetterLightFX:RegisterEvent("PointOfNoReturn", {priority = 3, enabled = true, loop = false, _color = Color(1, 1, 1, 1), 
         options = {
             enabled = {typ = "bool", localization = "Enabled"}
         }, 
         run = function(self, ...) self._ran_once = true end})
+        
     BetterLightFX:RegisterEvent("Bleedout", {priority = 4, enabled = true, loop = true, _color = Color(1, 1, 1, 1),  _progress = 0, 
         options = {
             enabled = {typ = "bool", localization = "Enabled"}, 
@@ -155,6 +157,7 @@ function BetterLightFX:InitEvents()
             coroutine.yield()
             self._ran_once = true
         end})
+        
     BetterLightFX:RegisterEvent("SwanSong", {priority = 5, enabled = true, loop = true, _color = Color(1, 0, 0.80, 1),  _t = 3, _frequency = 2,
         options = {
             enabled = {typ = "bool", localization = "Enabled"}, 
@@ -171,6 +174,7 @@ function BetterLightFX:InitEvents()
             BetterLightFX:SetColor(color2set.red, color2set.green, color2set.blue, color2set.alpha, self.name)
             self._ran_once = true
         end})
+        
     BetterLightFX:RegisterEvent("Flashbang", {priority = 6, enabled = true, loop = true, _color = Color(1, 1, 1, 1), _flashamount = 0, 
         options = {
             enabled = {typ = "bool", localization = "Enabled"}, 
@@ -210,7 +214,32 @@ function BetterLightFX:InitEvents()
             end
         end})
         
-    BetterLightFX:RegisterEvent("SafeDrilled", {priority = 8, enabled = true, loop = false, _color = Color(1, 1, 1, 1), _duration = 5,
+    BetterLightFX:RegisterEvent("LevelUp", {priority = 8, enabled = true, loop = false, _color = Color(1, 0, 0, 1),
+        options = {
+            enabled = {typ = "bool", localization = "Enabled"},
+            _color = {typ = "color", localization = "Color"}
+        }, 
+        run = function(self, ...)
+            
+            --Fade in
+            for glow_count = 0, 1, 0.05 do
+                BetterLightFX:SetColor(self._color.red, self._color.green, self._color.blue, glow_count, self.name)
+                coroutine.yield()
+            end
+            
+            BetterLightFX:wait(1)
+            
+            --Fade out
+            for glow_count = 1, 0, -0.05 do
+                BetterLightFX:SetColor(self._color.red, self._color.green, self._color.blue, glow_count, self.name)
+                coroutine.yield()
+            end
+            
+            BetterLightFX:EndEvent("LevelUp")
+            self._ran_once = true
+        end})
+        
+    BetterLightFX:RegisterEvent("SafeDrilled", {priority = 9, enabled = true, loop = false, _color = Color(1, 1, 1, 1), _duration = 5,
         options = {
             enabled = {typ = "bool", localization = "Enabled"},
             _duration = {typ = "number", localization = "Light Duration (Seconds)", maxVal = 30}
@@ -664,6 +693,7 @@ if Hooks then
             ["BLFXevent_SwanSong"] = "Swan Song",
             ["BLFXevent_Flashbang"] = "Flashbang",
             ["BLFXevent_EndLoss"] = "Game Over",
+            ["BLFXevent_LevelUp"] = "Level Up",
             ["BLFXevent_SafeDrilled"] = "Safe Drilled",
             
 		})
