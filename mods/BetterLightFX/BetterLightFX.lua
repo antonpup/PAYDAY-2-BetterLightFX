@@ -9,29 +9,27 @@ if not _G.BetterLightFX then
     BetterLightFX.LOG_LEVEL_WARNING = 2
     BetterLightFX.LOG_LEVEL_DEBUG = 3
     BetterLightFX.debug_enabled = true
-    BetterLightFX.debug_systemprint = false
+    BetterLightFX.debug_systemprint = true
     BetterLightFX.debug_level = BetterLightFX.LOG_LEVEL_WARNING
     
-    BetterLightFX._initialized = false
     
+    --Core
     BetterLightFX.current_color = Color.White
     BetterLightFX._current_event = nil
+    BetterLightFX.current_blend_color = Color.White
+    BetterLightFX._current_blend_event = nil
+    BetterLightFX._current_blend_amount = 0
     BetterLightFX.is_setting_color = false
     BetterLightFX._last_light_set_at = 0
     BetterLightFX.min_wait_time = 0.01
-    
     BetterLightFX.events = {}
-    
     BetterLightFX.Options = {}
     
-    --//
+    --Init stuff
+    BetterLightFX._initialized = false
     BetterLightFX.LuaPath = ModPath .. "lua/"
 	BetterLightFX.HookPath = ModPath .. "Hooks/"
     BetterLightFX.SavePath = SavePath
-    
-    BetterLightFX.menuOptions = "blfxoptions"
-    BetterLightFX.menuEventOptions = "blfxeventoptions"
-    
     BetterLightFX.HookFiles = {
         ["lib/network/matchmaking/networkaccountsteam"] = "NetworkAccountSteam.lua",
         ["lib/managers/menu/menuscenemanager"] = "MenuScene.lua",
@@ -42,20 +40,23 @@ if not _G.BetterLightFX then
         ["lib/managers/hud/hudassaultcorner"] = "HUDAssaultCorner.lua",
         ["lib/managers/hudmanagerpd2"] = "HUDManagerPD2.lua",
         ["core/lib/managers/coreenvironmentcontrollermanager"] = "CoreEnvironmentControllerManager.lua",
+        ["lib/managers/hud/hudstageendscreen"] = "HUDStageEndScreen.lua"
     }
-    
     BetterLightFX.LUA = {
         "DefaultOptions.lua",
         "Options.lua"
     }
     
+    --Menus
+    BetterLightFX.menuOptions = "blfxoptions"
+    BetterLightFX.menuEventOptions = "blfxeventoptions"
     BetterLightFX.ColorSchemeOptions = {
         {name = "RGB", option_name = "blfx_option_RGB"},
         {name = "RED", option_name = "blfx_option_RED"},
         {name = "GREEN", option_name = "blfx_option_GREEN"},
         {name = "BLUE", option_name = "blfx_option_BLUE"},
+        {name = "WHITE", option_name = "blfx_option_WHITE"},
     }
-    
     BetterLightFX.EventModOptions = {}
 end
 
@@ -147,7 +148,18 @@ function BetterLightFX:InitEvents()
         }, 
         run = function(self, ...) self._ran_once = true end})
         
-    BetterLightFX:RegisterEvent("Bleedout", {priority = 4, enabled = true, loop = true, _color = Color(1, 1, 1, 1),  _progress = 0, 
+    BetterLightFX:RegisterEvent("TakenDamage", {priority = 4, enabled = true, loop = true, _color = Color(1, 1, 0, 0), _hurtamount = 0, 
+        options = {
+            enabled = {typ = "bool", localization = "Enabled"}, 
+            _color = {typ = "color", localization = "Color"}
+        },
+        run = function(self, ...)
+            BetterLightFX:SetColor(self._color.red, self._color.green, self._color.blue, self._hurtamount, self.name)
+            coroutine.yield()
+            self._ran_once = true
+        end})
+        
+    BetterLightFX:RegisterEvent("Bleedout", {priority = 5, enabled = true, loop = true, _color = Color(1, 1, 1, 1),  _progress = 0, 
         options = {
             enabled = {typ = "bool", localization = "Enabled"}, 
             _color = {typ = "color", localization = "Color"}
@@ -158,7 +170,7 @@ function BetterLightFX:InitEvents()
             self._ran_once = true
         end})
         
-    BetterLightFX:RegisterEvent("SwanSong", {priority = 5, enabled = true, loop = true, _color = Color(1, 0, 0.80, 1),  _t = 3, _frequency = 2,
+    BetterLightFX:RegisterEvent("SwanSong", {priority = 6, enabled = true, loop = true, _color = Color(1, 0, 0.80, 1),  _t = 3, _frequency = 2,
         options = {
             enabled = {typ = "bool", localization = "Enabled"}, 
             _color = {typ = "color", localization = "Color"},
@@ -175,7 +187,7 @@ function BetterLightFX:InitEvents()
             self._ran_once = true
         end})
         
-    BetterLightFX:RegisterEvent("Flashbang", {priority = 6, enabled = true, loop = true, _color = Color(1, 1, 1, 1), _flashamount = 0, 
+    BetterLightFX:RegisterEvent("Flashbang", {priority = 7, enabled = true, loop = true, _color = Color(1, 1, 1, 1), _flashamount = 0, 
         options = {
             enabled = {typ = "bool", localization = "Enabled"}, 
             _color = {typ = "color", localization = "Color"}
@@ -186,7 +198,7 @@ function BetterLightFX:InitEvents()
             self._ran_once = true
         end})
         
-    BetterLightFX:RegisterEvent("EndLoss", {priority = 7, enabled = true, loop = true, 
+    BetterLightFX:RegisterEvent("EndLoss", {priority = 8, enabled = true, loop = true, 
         options = {
             enabled = {typ = "bool", localization = "Enabled"}
         }, 
@@ -214,7 +226,7 @@ function BetterLightFX:InitEvents()
             end
         end})
         
-    BetterLightFX:RegisterEvent("LevelUp", {priority = 8, enabled = true, loop = false, _color = Color(1, 0, 0, 1),
+    BetterLightFX:RegisterEvent("LevelUp", {priority = 9, enabled = true, loop = false, _color = Color(1, 0, 0, 1),
         options = {
             enabled = {typ = "bool", localization = "Enabled"},
             _color = {typ = "color", localization = "Color"}
@@ -239,7 +251,7 @@ function BetterLightFX:InitEvents()
             self._ran_once = true
         end})
         
-    BetterLightFX:RegisterEvent("SafeDrilled", {priority = 9, enabled = true, loop = false, _color = Color(1, 1, 1, 1), _duration = 5,
+    BetterLightFX:RegisterEvent("SafeDrilled", {priority = 10, enabled = true, loop = false, _color = Color(1, 1, 1, 1), _duration = 5,
         options = {
             enabled = {typ = "bool", localization = "Enabled"},
             _duration = {typ = "number", localization = "Light Duration (Seconds)", maxVal = 30}
@@ -515,6 +527,8 @@ function BetterLightFX:PushColor(color, event)
             BetterLightFX.current_color = Color(color.alpha, 0, mono_color, 0) 
         elseif BetterLightFX.ColorSchemeOptions[BetterLightFX.Options.ColorScheme].name == "BLUE" then
             BetterLightFX.current_color = Color(color.alpha, 0, 0, mono_color)
+        elseif BetterLightFX.ColorSchemeOptions[BetterLightFX.Options.ColorScheme].name == "WHITE" then
+            BetterLightFX.current_color = Color(color.alpha, mono_color, mono_color, mono_color)
         else
             BetterLightFX.current_color = color
         end
