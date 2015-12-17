@@ -9,9 +9,8 @@ if not _G.BetterLightFX then
     BetterLightFX.LOG_LEVEL_WARNING = 2
     BetterLightFX.LOG_LEVEL_DEBUG = 3
     BetterLightFX.debug_enabled = true
-    BetterLightFX.debug_systemprint = true
+    BetterLightFX.debug_systemprint = false
     BetterLightFX.debug_level = BetterLightFX.LOG_LEVEL_WARNING
-    
     
     --Core
     BetterLightFX.current_color = Color.White
@@ -23,6 +22,7 @@ if not _G.BetterLightFX then
     BetterLightFX._last_light_set_at = 0
     BetterLightFX.min_wait_time = 0.01
     BetterLightFX.events = {}
+    BetterLightFX.running_events = {}
     BetterLightFX.Options = {}
     
     --Init stuff
@@ -40,7 +40,8 @@ if not _G.BetterLightFX then
         ["lib/managers/hud/hudassaultcorner"] = "HUDAssaultCorner.lua",
         ["lib/managers/hudmanagerpd2"] = "HUDManagerPD2.lua",
         ["core/lib/managers/coreenvironmentcontrollermanager"] = "CoreEnvironmentControllerManager.lua",
-        ["lib/managers/hud/hudstageendscreen"] = "HUDStageEndScreen.lua"
+        ["lib/managers/hud/hudstageendscreen"] = "HUDStageEndScreen.lua",
+        ["lib/managers/hud/hudhitdirection"] = "HUDHitDirection.lua"
     }
     BetterLightFX.LUA = {
         "DefaultOptions.lua",
@@ -148,7 +149,32 @@ function BetterLightFX:InitEvents()
         }, 
         run = function(self, ...) self._ran_once = true end})
         
-    BetterLightFX:RegisterEvent("TakenDamage", {priority = 4, enabled = true, loop = true, _color = Color(1, 1, 0, 0), _hurtamount = 0, 
+    BetterLightFX:RegisterEvent("TakenDamage", {priority = 4, enabled = true, loop = false, _use_custom_color = false, _custom_color = Color(1, 1, 0.313, 0), _color = Color(1, 1, 0.313, 0), _t = 0.6,
+        options = {
+            enabled = {typ = "bool", localization = "Enabled"}, 
+            _use_custom_color = {typ = "bool", localization = "Use Custom Color"}, 
+            _custom_color = {typ = "color", localization = "Color"}
+        },
+        run = function(self, ...)
+            local used_color = self._color
+            
+            if self._use_custom_color then
+                used_color = self._custom_color
+            end
+            
+            local t = self._t
+            while t > 0 do
+                local dt = coroutine.yield()
+                t = t - dt
+                BetterLightFX:SetColor(used_color.red, used_color.green, used_color.blue, (t / self._t), self.name)
+            end
+            
+            coroutine.yield()
+            BetterLightFX:EndEvent("TakenDamage")
+            self._ran_once = true
+        end})
+        
+    BetterLightFX:RegisterEvent("TakenSevereDamage", {priority = 4, enabled = true, loop = true, _color = Color(1, 1, 0, 0), _hurtamount = 0, 
         options = {
             enabled = {typ = "bool", localization = "Enabled"}, 
             _color = {typ = "color", localization = "Color"}
@@ -401,6 +427,36 @@ function BetterLightFX:RegisterEvent(name, parameters, override)
     BetterLightFX:PrintDebug("[BetterLightFX] Registered event " .. name, BetterLightFX.LOG_LEVEL_INFO)
 end
 
+function BetterLightFX:GetNextRunningEvent()
+    local returnevent = nil
+    
+    for key, event in ipairs(self.running_events) do
+        if not returnevent then
+            returnevent = event
+        else
+            
+            if BetterLightFX.events[returnevent].priority < BetterLightFX.events[event].priority then
+                returnevent = event
+            end
+            
+        end
+    end
+    
+    return returnevent
+end
+
+function BetterLightFX:RemoveRunningEvent(event)
+    
+    for key, runningevent in ipairs(self.running_events) do
+        if runningevent == event then
+            table.remove(self.running_events, key)
+            do return end
+        end
+    end
+    
+end
+
+
 function BetterLightFX:GetEventParamaterValue(name, param)
     if not self:DoesEventExist(name) then
         return
@@ -408,7 +464,6 @@ function BetterLightFX:GetEventParamaterValue(name, param)
     
     return self.events[name][param]
 end
-
 
 function BetterLightFX:DoesEventExist(name)
     if not self.events[name] then
@@ -436,9 +491,11 @@ function BetterLightFX:StartEvent(name)
     if self._current_event and self.events[self._current_event].priority < self.events[name].priority then
         self._current_event = name
         self.events[name]._ran_once = false
+        table.insert(self.running_events, name)
     elseif not self._current_event then
         self._current_event = name
         self.events[name]._ran_once = false
+        table.insert(self.running_events, name)
     end
     --BetterLightFX:PrintDebug("[BetterLightFX] Event started, " .. name, BetterLightFX.LOG_LEVEL_DEBUG)
 end
@@ -451,8 +508,11 @@ function BetterLightFX:EndEvent(name)
     end
     
     if self._current_event and self._current_event == name then
-        self._current_event = nil
-        if BetterLightFX.Options.DarkIdle then
+        
+        BetterLightFX:RemoveRunningEvent(name)
+        
+        self._current_event = BetterLightFX:GetNextRunningEvent()
+        if not self._current_event and BetterLightFX.Options.DarkIdle then
             BetterLightFX:SetColor(0, 0, 0, 0, nil)
         end
     end
@@ -703,6 +763,8 @@ if Hooks then
             ["BLFXevent_Suspicion"] = "Suspicion",
 			["BLFXevent_AssaultIndicator"] = "Assault Indicator",
             ["BLFXevent_PointOfNoReturn"] = "Point Of No Return",
+            ["BLFXevent_TakenDamage"] = "Taken Damage",
+            ["BLFXevent_TakenSevereDamage"] = "Taken Severed Damage",
             ["BLFXevent_Bleedout"] = "Bleedout",
             ["BLFXevent_SwanSong"] = "Swan Song",
             ["BLFXevent_Flashbang"] = "Flashbang",

@@ -14,12 +14,12 @@ end )
 Hooks:PostHook( CoreEnvironmentControllerManager, "set_post_composite", "CoreEnvironmentControllerManager:set_post_composite_BetterLightFX_TakenDamage", function(self, t, dt)
     if self._health_effect_value_diff > 0 then
         if BetterLightFX then
-            BetterLightFX:StartEvent("TakenDamage")
-            BetterLightFX:UpdateEvent("TakenDamage", {["_hurtamount"] = self._health_effect_value_diff})
+            BetterLightFX:StartEvent("TakenSevereDamage")
+            BetterLightFX:UpdateEvent("TakenSevereDamage", {["_hurtamount"] = self._health_effect_value_diff})
         end
     else
         if BetterLightFX then
-            BetterLightFX:EndEvent("TakenDamage")
+            BetterLightFX:EndEvent("TakenSevereDamage")
         end
     end
 end )
