@@ -8,7 +8,6 @@ function PlayerDamage:update_downed(t, dt)
 		end
         
         if BetterLightFX then
-            BetterLightFX:StartEvent("Bleedout")
             BetterLightFX:UpdateEvent("Bleedout", {["_progress"] = (self._downed_progression / 100) * 1})
         end
         
@@ -25,6 +24,12 @@ function PlayerDamage:update_downed(t, dt)
 	end
 	return false
 end
+
+Hooks:PostHook( PlayerDamage, "on_downed", "PlayerDamage:on_downed_BetterLightFX", function()
+    if BetterLightFX then
+        BetterLightFX:StartEvent("Bleedout")
+    end
+end )
 
 Hooks:PostHook( PlayerDamage, "revive", "PlayerDamage:revive_BetterLightFX", function()
     if BetterLightFX then

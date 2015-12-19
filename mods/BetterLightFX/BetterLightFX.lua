@@ -41,7 +41,8 @@ if not _G.BetterLightFX then
         ["lib/managers/hudmanagerpd2"] = "HUDManagerPD2.lua",
         ["core/lib/managers/coreenvironmentcontrollermanager"] = "CoreEnvironmentControllerManager.lua",
         ["lib/managers/hud/hudstageendscreen"] = "HUDStageEndScreen.lua",
-        ["lib/managers/hud/hudhitdirection"] = "HUDHitDirection.lua"
+        ["lib/managers/hud/hudhitdirection"] = "HUDHitDirection.lua",
+        ["lib/units/beings/player/states/playertased"] = "PlayerTased.lua"
     }
     BetterLightFX.LUA = {
         "DefaultOptions.lua",
@@ -170,7 +171,7 @@ function BetterLightFX:InitEvents()
             end
             
             coroutine.yield()
-            BetterLightFX:EndEvent("TakenDamage")
+            BetterLightFX:EndEvent(self.name)
             self._ran_once = true
         end})
         
@@ -192,6 +193,11 @@ function BetterLightFX:InitEvents()
         },
         run = function(self, ...)
             BetterLightFX:SetColor(self._color.red, self._color.green, self._color.blue, self._progress, self.name)
+            
+            if self._progress < 0.05 then
+                BetterLightFX:EndEvent(self.name)
+            end
+            
             coroutine.yield()
             self._ran_once = true
         end})
@@ -213,7 +219,25 @@ function BetterLightFX:InitEvents()
             self._ran_once = true
         end})
         
-    BetterLightFX:RegisterEvent("Flashbang", {priority = 7, enabled = true, loop = true, _color = Color(1, 1, 1, 1), _flashamount = 0, 
+    BetterLightFX:RegisterEvent("Electrocuted", {priority = 7, enabled = true, loop = true, _color = Color(1, 0, 0.80, 1), use_custom_color = false, _random_color = Color(1, 1, 1, 1), _alpha_fade_mod = 0,
+        options = {
+            enabled = {typ = "bool", localization = "Enabled"}, 
+            use_custom_color = {typ = "bool", localization = "Use Custom Color Instead"}, 
+            _color = {typ = "color", localization = "Color"},
+        },
+        run = function(self, ...)
+            
+            if use_custom_color then
+                BetterLightFX:SetColor(self._color.red, self._color.green, self._color.blue, self._color.alpha - self._alpha_fade_mod, self.name)
+            else
+                BetterLightFX:SetColor(self._random_color.red, self._random_color.green, self._random_color.blue, self._random_color.alpha - self._alpha_fade_mod, self.name)
+            end
+            self._alpha_fade_mod = math.min(self._alpha_fade_mod + 0.05, 1)
+            coroutine.yield()
+            self._ran_once = true
+        end})
+        
+    BetterLightFX:RegisterEvent("Flashbang", {priority = 8, enabled = true, loop = true, _color = Color(1, 1, 1, 1), _flashamount = 0, 
         options = {
             enabled = {typ = "bool", localization = "Enabled"}, 
             _color = {typ = "color", localization = "Color"}
@@ -224,7 +248,7 @@ function BetterLightFX:InitEvents()
             self._ran_once = true
         end})
         
-    BetterLightFX:RegisterEvent("EndLoss", {priority = 8, enabled = true, loop = true, 
+    BetterLightFX:RegisterEvent("EndLoss", {priority = 9, enabled = true, loop = true, 
         options = {
             enabled = {typ = "bool", localization = "Enabled"}
         }, 
@@ -252,7 +276,7 @@ function BetterLightFX:InitEvents()
             end
         end})
         
-    BetterLightFX:RegisterEvent("LevelUp", {priority = 9, enabled = true, loop = false, _color = Color(1, 0, 0, 1),
+    BetterLightFX:RegisterEvent("LevelUp", {priority = 10, enabled = true, loop = false, _color = Color(1, 0, 0, 1),
         options = {
             enabled = {typ = "bool", localization = "Enabled"},
             _color = {typ = "color", localization = "Color"}
@@ -273,11 +297,11 @@ function BetterLightFX:InitEvents()
                 coroutine.yield()
             end
             
-            BetterLightFX:EndEvent("LevelUp")
+            BetterLightFX:EndEvent(self.name)
             self._ran_once = true
         end})
         
-    BetterLightFX:RegisterEvent("SafeDrilled", {priority = 10, enabled = true, loop = false, _color = Color(1, 1, 1, 1), _duration = 5,
+    BetterLightFX:RegisterEvent("SafeDrilled", {priority = 11, enabled = true, loop = false, _color = Color(1, 1, 1, 1), _duration = 5,
         options = {
             enabled = {typ = "bool", localization = "Enabled"},
             _duration = {typ = "number", localization = "Light Duration (Seconds)", maxVal = 30}
@@ -512,8 +536,8 @@ function BetterLightFX:EndEvent(name)
         BetterLightFX:RemoveRunningEvent(name)
         
         self._current_event = BetterLightFX:GetNextRunningEvent()
-        if not self._current_event and BetterLightFX.Options.DarkIdle then
-            BetterLightFX:SetColor(0, 0, 0, 0, nil)
+        if BetterLightFX.Options.DarkIdle then
+            BetterLightFX:SetColor(0, 0, 0, 0, self._current_event)
         end
     end
     
@@ -653,6 +677,9 @@ function BetterLightFX:CreateColorOption(node, params)
         node:add_item(item)
         item.dirty_callback = nil
     end
+    
+    local new_menu_divider = node:create_item({type = "MenuItemDivider"}, {name = "divider_color_" .. params.event, no_text = true, size = 8,})
+    node:add_item(new_menu_divider)
 end
 
 function BetterLightFX:CreateNumberOption(node, params)
@@ -676,6 +703,9 @@ function BetterLightFX:CreateNumberOption(node, params)
     item:set_value(params.value)
     node:add_item(item)
     item.dirty_callback = nil
+    
+    local new_menu_divider = node:create_item({type = "MenuItemDivider"}, {name = "divider_number" .. params.event, no_text = true, size = 8,})
+    node:add_item(new_menu_divider)
 end
 
 function BetterLightFX:CreateBoolOption(node, params)
@@ -725,6 +755,9 @@ function BetterLightFX:CreateBoolOption(node, params)
 	item:set_value( params.value and "on" or "off" )
     node:add_item(item)
     item.dirty_callback = nil
+    
+    local new_menu_divider = node:create_item({type = "MenuItemDivider"}, {name = "divider_bool" .. params.event, no_text = true, size = 8,})
+    node:add_item(new_menu_divider)
 end
     
 if not BetterLightFX.init then
@@ -767,6 +800,7 @@ if Hooks then
             ["BLFXevent_TakenSevereDamage"] = "Taken Severed Damage",
             ["BLFXevent_Bleedout"] = "Bleedout",
             ["BLFXevent_SwanSong"] = "Swan Song",
+            ["BLFXevent_Electrocuted"] = "Electrocuted",
             ["BLFXevent_Flashbang"] = "Flashbang",
             ["BLFXevent_EndLoss"] = "Game Over",
             ["BLFXevent_LevelUp"] = "Level Up",
