@@ -270,7 +270,7 @@ function BetterLightFX:InitEvents()
             self._ran_once = true
         end})
         
-    BetterLightFX:RegisterEvent("TakenSevereDamage", {priority = 4, enabled = true, loop = true, _color = Color(1, 1, 0, 0), _hurtamount = 0, 
+    BetterLightFX:RegisterEvent("TakenSevereDamage", {priority = 5, enabled = true, loop = true, _color = Color(1, 1, 0, 0), _hurtamount = 0, 
         options = {
             enabled = {typ = "bool", localization = "Enabled"}, 
             _color = {typ = "color", localization = "Color"}
@@ -281,7 +281,7 @@ function BetterLightFX:InitEvents()
             self._ran_once = true
         end})
         
-    BetterLightFX:RegisterEvent("Bleedout", {priority = 5, enabled = true, loop = true, _color = Color(1, 1, 1, 1),  _progress = 0, 
+    BetterLightFX:RegisterEvent("Bleedout", {priority = 6, enabled = true, loop = true, _color = Color(1, 1, 1, 1),  _progress = 0, 
         options = {
             enabled = {typ = "bool", localization = "Enabled"}, 
             _color = {typ = "color", localization = "Color"}
@@ -297,7 +297,7 @@ function BetterLightFX:InitEvents()
             self._ran_once = true
         end})
         
-    BetterLightFX:RegisterEvent("SwanSong", {priority = 6, enabled = true, loop = true, _color = Color(1, 0, 0.80, 1),  _t = 3, _frequency = 2,
+    BetterLightFX:RegisterEvent("SwanSong", {priority = 7, enabled = true, loop = true, _color = Color(1, 0, 0.80, 1),  _t = 3, _frequency = 2,
         options = {
             enabled = {typ = "bool", localization = "Enabled"}, 
             _color = {typ = "color", localization = "Color"},
@@ -314,7 +314,7 @@ function BetterLightFX:InitEvents()
             self._ran_once = true
         end})
         
-    BetterLightFX:RegisterEvent("Electrocuted", {priority = 7, enabled = true, loop = true, _color = Color(1, 0, 0.80, 1), use_custom_color = false, _random_color = Color(1, 1, 1, 1), _alpha_fade_mod = 0,
+    BetterLightFX:RegisterEvent("Electrocuted", {priority = 8, enabled = true, loop = true, _color = Color(1, 0, 0.80, 1), use_custom_color = false, _random_color = Color(1, 1, 1, 1), _alpha_fade_mod = 0,
         options = {
             enabled = {typ = "bool", localization = "Enabled"}, 
             use_custom_color = {typ = "bool", localization = "Use Custom Color Instead"}, 
@@ -332,7 +332,7 @@ function BetterLightFX:InitEvents()
             self._ran_once = true
         end})
         
-    BetterLightFX:RegisterEvent("Flashbang", {priority = 8, enabled = true, loop = true, _color = Color(1, 1, 1, 1), _flashamount = 0, 
+    BetterLightFX:RegisterEvent("Flashbang", {priority = 9, enabled = true, loop = true, _color = Color(1, 1, 1, 1), _flashamount = 0, 
         options = {
             enabled = {typ = "bool", localization = "Enabled"}, 
             _color = {typ = "color", localization = "Color"}
@@ -343,7 +343,7 @@ function BetterLightFX:InitEvents()
             self._ran_once = true
         end})
         
-    BetterLightFX:RegisterEvent("EndLoss", {priority = 9, enabled = true, loop = true, 
+    BetterLightFX:RegisterEvent("EndLoss", {priority = 10, enabled = true, loop = true, 
         options = {
             enabled = {typ = "bool", localization = "Enabled"}
         }, 
@@ -371,7 +371,7 @@ function BetterLightFX:InitEvents()
             end
         end})
         
-    BetterLightFX:RegisterEvent("LevelUp", {priority = 10, enabled = true, loop = false, _color = Color(1, 0, 0, 1),
+    BetterLightFX:RegisterEvent("LevelUp", {priority = 11, enabled = true, loop = false, _color = Color(1, 0, 0, 1),
         options = {
             enabled = {typ = "bool", localization = "Enabled"},
             _color = {typ = "color", localization = "Color"}
@@ -396,7 +396,7 @@ function BetterLightFX:InitEvents()
             self._ran_once = true
         end})
         
-    BetterLightFX:RegisterEvent("SafeDrilled", {priority = 11, enabled = true, loop = false, _color = Color(1, 1, 1, 1), _duration = 5,
+    BetterLightFX:RegisterEvent("SafeDrilled", {priority = 12, enabled = true, loop = false, _color = Color(1, 1, 1, 1), _duration = 5,
         options = {
             enabled = {typ = "bool", localization = "Enabled"},
             _duration = {typ = "number", localization = "Light Duration (Seconds)", maxVal = 30}

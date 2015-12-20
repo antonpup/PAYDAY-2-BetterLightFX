@@ -3,13 +3,13 @@ Hooks:PostHook( HUDAssaultCorner, "_end_assault", "HUDAssaultCorner:_end_assault
         BetterLightFX:EndEvent("AssaultIndicator")
     end
 end )
-
+--[[
 Hooks:PostHook( HUDAssaultCorner, "_hide_icon_assaultbox", "HUDAssaultCorner:_hide_icon_assaultbox_BetterLightFX", function()
     if BetterLightFX then
         BetterLightFX:EndEvent("AssaultIndicator")
     end
 end )
-
+]]
 Hooks:PostHook( HUDAssaultCorner, "_start_assault", "HUDAssaultCorner:_start_assault_BetterLightFX", function(self)
     if BetterLightFX then
         BetterLightFX:StartEvent("AssaultIndicator")

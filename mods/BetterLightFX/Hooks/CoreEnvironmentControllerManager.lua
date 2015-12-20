@@ -1,8 +1,8 @@
 Hooks:PostHook( CoreEnvironmentControllerManager, "set_post_composite", "CoreEnvironmentControllerManager:set_post_composite_BetterLightFX_flashbang", function(self, t, dt)
-    if 0 < self._current_flashbang then
+    if 0 < self._current_flashbang_flash then
         if BetterLightFX then
             BetterLightFX:StartEvent("Flashbang")
-            BetterLightFX:UpdateEvent("Flashbang", {["_flashamount"] = math.min(self._current_flashbang, 1)})
+            BetterLightFX:UpdateEvent("Flashbang", {["_flashamount"] = math.min(self._current_flashbang_flash, 1)})
         end
     else
         if BetterLightFX then
@@ -15,7 +15,7 @@ Hooks:PostHook( CoreEnvironmentControllerManager, "set_post_composite", "CoreEnv
     if self._health_effect_value_diff > 0 then
         if BetterLightFX then
             BetterLightFX:StartEvent("TakenSevereDamage")
-            BetterLightFX:UpdateEvent("TakenSevereDamage", {["_hurtamount"] = self._health_effect_value_diff})
+            BetterLightFX:UpdateEvent("TakenSevereDamage", {["_hurtamount"] = math.min(self._health_effect_value_diff, 1)})
         end
     else
         if BetterLightFX then
