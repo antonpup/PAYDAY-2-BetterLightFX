@@ -21,6 +21,7 @@ if not _G.BetterLightFX then
     BetterLightFX.is_setting_color = false
     BetterLightFX._last_light_set_at = 0
     BetterLightFX.min_wait_time = 0.01
+    BetterLightFX.idle_events = {}
     BetterLightFX.events = {}
     BetterLightFX.running_events = {}
     BetterLightFX.Options = {}
@@ -52,6 +53,7 @@ if not _G.BetterLightFX then
     --Menus
     BetterLightFX.menuOptions = "blfxoptions"
     BetterLightFX.menuEventOptions = "blfxeventoptions"
+    BetterLightFX.menuIdleEventOptions = "blfxidleeventoptions"
     BetterLightFX.ColorSchemeOptions = {
         {name = "RGB", option_name = "blfx_option_RGB"},
         {name = "RED", option_name = "blfx_option_RED"},
@@ -60,6 +62,7 @@ if not _G.BetterLightFX then
         {name = "WHITE", option_name = "blfx_option_WHITE"},
     }
     BetterLightFX.EventModOptions = {}
+    BetterLightFX.IdleEventModOptions = {}
 end
 
 function BetterLightFX:DebugLevelString(level)
@@ -122,6 +125,98 @@ end
 
 function BetterLightFX:InitEvents()
     
+    --Idle Events
+    BetterLightFX:RegisterIdleEvent("ColorsOut", {
+        options = {
+        },
+        run = function(self, ...)
+            BetterLightFX:SetColor(0, 0, 0, 0, nil) --nil because Idle events can only run when there is no active event
+            coroutine.yield()
+            self._ran_once = true
+        end})
+    
+    BetterLightFX:RegisterIdleEvent("SingleColor", {_color = Color(1, 1, 1, 1), _brightness = 1, _pulsing = false, _pulserate = 1, _t = 3,
+        options = {
+            _brightness = {typ = "number", localization = "Brightness", minVal = 0, maxVal = 1},
+            _color = {typ = "color", localization = "Color"},
+            _pulsing = {typ = "bool", localization = "Pulse"},
+            _pulserate = {typ = "number", localization = "Pulse Rate", minVal = 0, maxVal = 3},
+            
+        },
+        run = function(self, ...)
+            local dt = coroutine.yield()
+            self._t = self._t - dt
+            
+            if self._pulsing then
+                self._color.alpha = math.abs((math.sin(self._t * 90 * self._pulserate * 1)))
+            else
+                self._color.alpha = 1
+            end
+            
+            BetterLightFX:SetColor(self._color.red, self._color.green, self._color.blue, self._color.alpha * self._brightness, nil)
+            self._ran_once = true
+        end})
+    
+    BetterLightFX:RegisterIdleEvent("Rainbow", {_step = 0 , _speed = 1, _brightness = 1,
+        options = {
+            _brightness = {typ = "number", localization = "Brightness", minVal = 0, maxVal = 1},
+            _speed = {typ = "number", localization = "Rainbow Speed", minVal = 0.1, maxVal = 3},
+        },
+        run = function(self, ...)
+            
+            local current_step = self._step % 6
+            local rainbow_step = 0
+            
+            if current_step == 0 then
+                -- Red, +Green
+                while rainbow_step < 1 do
+                    BetterLightFX:SetColor(1, rainbow_step, 0, self._brightness, nil)
+                    coroutine.yield()
+                    rainbow_step = rainbow_step + (0.05 * self._speed)
+                end
+            elseif current_step == 1 then
+                -- -Red, Green
+                while rainbow_step < 1 do
+                    BetterLightFX:SetColor(1 - rainbow_step, 1, 0, self._brightness, nil)
+                    coroutine.yield()
+                    rainbow_step = rainbow_step + (0.05 * self._speed)
+                end
+            elseif current_step == 2 then
+                -- Green, +Blue
+                while rainbow_step < 1 do
+                    BetterLightFX:SetColor(0, 1, rainbow_step, self._brightness, nil)
+                    coroutine.yield()
+                    rainbow_step = rainbow_step + (0.05 * self._speed)
+                end
+            elseif current_step == 3 then
+                -- -Green, Blue
+                while rainbow_step < 1 do
+                    BetterLightFX:SetColor(0, 1 - rainbow_step, 1, self._brightness, nil)
+                    coroutine.yield()
+                    rainbow_step = rainbow_step + (0.05 * self._speed)
+                end
+            elseif current_step == 4 then
+                -- Blue, +Red
+                while rainbow_step < 1 do
+                    BetterLightFX:SetColor(rainbow_step, 0, 1, self._brightness, nil)
+                    coroutine.yield()
+                    rainbow_step = rainbow_step + (0.05 * self._speed)
+                end
+            elseif current_step == 5 then
+                -- -Blue, Red
+                while rainbow_step < 1 do
+                    BetterLightFX:SetColor(1, 0, 1 - rainbow_step, self._brightness, nil)
+                    coroutine.yield()
+                    rainbow_step = rainbow_step + (0.05 * self._speed)
+                end
+            end
+            
+            self._step = self._step + 1
+            
+            self._ran_once = true
+        end})
+    
+    --Regular Events
     BetterLightFX:RegisterEvent("Suspicion", {priority = 1, enabled = true, loop = false, _color = Color(1, 1, 1, 1), 
         options = {
             enabled = {typ = "bool", localization = "Enabled"}
@@ -227,12 +322,12 @@ function BetterLightFX:InitEvents()
         },
         run = function(self, ...)
             
-            if use_custom_color then
+            if self.use_custom_color then
                 BetterLightFX:SetColor(self._color.red, self._color.green, self._color.blue, self._color.alpha - self._alpha_fade_mod, self.name)
             else
                 BetterLightFX:SetColor(self._random_color.red, self._random_color.green, self._random_color.blue, self._random_color.alpha - self._alpha_fade_mod, self.name)
             end
-            self._alpha_fade_mod = math.min(self._alpha_fade_mod + 0.05, 1)
+            self._alpha_fade_mod = math.min(self._alpha_fade_mod + 0.01, 1)
             coroutine.yield()
             self._ran_once = true
         end})
@@ -387,10 +482,9 @@ function BetterLightFX:CreateCoroutine()
                 if self.events[self._current_event] then
                     --BetterLightFX:PrintDebug("Attempting to run " .. self._current_event, BetterLightFX.LOG_LEVEL_DEBUG)
                     
-                        if self.events[self._current_event].loop then
-                            self.events[self._current_event]:run()
-                        else
-
+                    if self.events[self._current_event].loop then
+                        self.events[self._current_event]:run()
+                    else
                         if not self.events[self._current_event]._ran_once then
                             self.events[self._current_event]:run()
                         end
@@ -398,6 +492,10 @@ function BetterLightFX:CreateCoroutine()
                     
                 end
                 --BetterLightFX:PrintDebug("Ran " .. self._current_event, BetterLightFX.LOG_LEVEL_DEBUG)
+            else
+                if self.idle_events[BetterLightFX.IdleEventModOptions[BetterLightFX.Options.IdleEvent].event_name] then
+                    self.idle_events[BetterLightFX.IdleEventModOptions[BetterLightFX.Options.IdleEvent].event_name]:run()
+                end
             end
             coroutine.yield()
         end
@@ -420,6 +518,7 @@ function BetterLightFX:RegisterEvent(name, parameters, override)
     
     self.events[name] = parameters
     self.events[name].name = name
+    self.events[name].display_name = "blfx_" .. name
     self.events[name].enabled = true
     
     for i, eventOpt in pairs(BetterLightFX.EventModOptions) do
@@ -451,6 +550,50 @@ function BetterLightFX:RegisterEvent(name, parameters, override)
     BetterLightFX:PrintDebug("[BetterLightFX] Registered event " .. name, BetterLightFX.LOG_LEVEL_INFO)
 end
 
+function BetterLightFX:RegisterIdleEvent(name, parameters)
+    if self.idle_events[name] then
+        BetterLightFX:PrintDebug("[BetterLightFX] Cannot replace existing idle event, " .. name, BetterLightFX.LOG_LEVEL_INFO)
+        return
+    end
+    
+    self.idle_events[name] = parameters
+    self.idle_events[name].name = name
+    self.idle_events[name].display_name = "blfx_" .. name
+    
+    for i, eventOpt in pairs(BetterLightFX.IdleEventModOptions) do
+        if eventOpt.event_name == name then
+            table.remove(BetterLightFX.IdleEventModOptions, i)
+        end
+    end
+    
+    if parameters.options then
+        table.insert(BetterLightFX.IdleEventModOptions, {
+            event_name = name,
+            options = parameters.options
+        })
+    else
+        table.insert(BetterLightFX.IdleEventModOptions, {
+            event_name = name,
+            options = {}
+        })
+    end
+    
+    if self.Options[name] then
+        for param, data in pairs(self.Options[name]) do
+            if type(data) == "table" then
+                self.idle_events[name][param] = self.idle_events[name][param] or Color.white
+                for color, value in pairs(data) do
+                    self.idle_events[name][param][color] = value
+                end
+            else
+                self.idle_events[name][param] = data
+            end
+        end
+    end
+    
+    BetterLightFX:PrintDebug("[BetterLightFX] Registered idle event " .. name, BetterLightFX.LOG_LEVEL_INFO)
+end
+
 function BetterLightFX:GetNextRunningEvent()
     local returnevent = nil
     
@@ -480,7 +623,6 @@ function BetterLightFX:RemoveRunningEvent(event)
     
 end
 
-
 function BetterLightFX:GetEventParamaterValue(name, param)
     if not self:DoesEventExist(name) then
         return
@@ -489,9 +631,26 @@ function BetterLightFX:GetEventParamaterValue(name, param)
     return self.events[name][param]
 end
 
+function BetterLightFX:GetIdleEventParamaterValue(name, param)
+    if not self:DoesIdleEventExist(name) then
+        return
+    end
+    
+    return self.idle_events[name][param]
+end
+
 function BetterLightFX:DoesEventExist(name)
     if not self.events[name] then
         BetterLightFX:PrintDebug("[BetterLightFX] Event does not exist, " .. tostring(name), BetterLightFX.LOG_LEVEL_WARNING)
+        return false
+    else
+        return true
+    end
+end
+
+function BetterLightFX:DoesIdleEventExist(name)
+    if not self.idle_events[name] then
+        BetterLightFX:PrintDebug("[BetterLightFX] Idle event does not exist, " .. tostring(name), BetterLightFX.LOG_LEVEL_WARNING)
         return false
     else
         return true
@@ -536,9 +695,6 @@ function BetterLightFX:EndEvent(name)
         BetterLightFX:RemoveRunningEvent(name)
         
         self._current_event = BetterLightFX:GetNextRunningEvent()
-        if BetterLightFX.Options.DarkIdle then
-            BetterLightFX:SetColor(0, 0, 0, 0, self._current_event)
-        end
     end
     
     --BetterLightFX:PrintDebug("[BetterLightFX] Event ended, " .. name, BetterLightFX.LOG_LEVEL_DEBUG)
@@ -787,17 +943,24 @@ if Hooks then
 			[BetterLightFX.name .. "color_scheme_desc"] = "Allows for selection of preferred coloring, in the event that you do not have an RGB device",
             [BetterLightFX.name .. "monochrome_brightness_title"] = "Monochrome Brightness",
 			[BetterLightFX.name .. "monochrome_brightness_desc"] = "Adjusts the brightness for monochrome color scheme",
-            [BetterLightFX.name .."toggleDarkIdle_title"] = "Dark on Idle",
-			[BetterLightFX.name .. "toggleDarkIdle_desc"] = "Toggles the turning off of LED's when the keyboard is Idle",
+            [BetterLightFX.name .. "idleEvent_title"] = "Idle Action",
+			[BetterLightFX.name .. "idleEvent_desc"] = "When lights are not being set, this event will be played",
+            [BetterLightFX.name .. "IdleEvents_title"] = "Idle Settings",
+			[BetterLightFX.name .. "IdleEvents_desc"] = "Change options of currently selected Idle Event",
             [BetterLightFX.name .. "modEvents_title"] = "Modify Events",
 			[BetterLightFX.name .. "modEvents_desc"] = "Change options of BetterLightFX events",
             [BetterLightFX.name .. "events_title"] = "Event",
 			[BetterLightFX.name .. "events_desc"] = "Select an event to modify",
+            
+            ["blfx_ColorsOut"] = "Dark",
+            ["blfx_SingleColor"] = "Single Color",
+            ["blfx_Rainbow"] = "Rainbow",
+            
             ["BLFXevent_Suspicion"] = "Suspicion",
 			["BLFXevent_AssaultIndicator"] = "Assault Indicator",
             ["BLFXevent_PointOfNoReturn"] = "Point Of No Return",
             ["BLFXevent_TakenDamage"] = "Taken Damage",
-            ["BLFXevent_TakenSevereDamage"] = "Taken Severed Damage",
+            ["BLFXevent_TakenSevereDamage"] = "Critical Damage",
             ["BLFXevent_Bleedout"] = "Bleedout",
             ["BLFXevent_SwanSong"] = "Swan Song",
             ["BLFXevent_Electrocuted"] = "Electrocuted",
@@ -818,6 +981,8 @@ if Hooks then
     Hooks:Add("MenuManagerSetupCustomMenus", "Base_Setup" .. BetterLightFX.name .. "Menus", function( menu_manager, nodes )
         MenuHelper:NewMenu(BetterLightFX.menuOptions)
         MenuHelper:NewMenu(BetterLightFX.menuEventOptions)
+        MenuHelper:NewMenu(BetterLightFX.menuIdleEventOptions)
+        
     end)
     
     Hooks:RegisterHook(BetterLightFX.name .. "CreateEvents")
@@ -882,15 +1047,76 @@ if Hooks then
             priority = 997
         })
         
-        MenuHelper:AddToggle({
-            id = "DarkIdle",
-			title = BetterLightFX.name .. "toggleDarkIdle_title",
-			desc = BetterLightFX.name .. "toggleDarkIdle_desc",
-			callback = "blfx_toggleBool",
-			menu_id = BetterLightFX.menuOptions,
-			value = BetterLightFX.Options.DarkIdle,
+        MenuHelper:AddDivider({
+            id = "RGB_Divider",
+            size = 16,
+            menu_id = BetterLightFX.menuOptions,
             priority = 996
         })
+        
+        MenuCallbackHandler.blfx_IdleEventChange = function(this, item)
+            BetterLightFX.Options.IdleEvent = item:value()
+            BetterLightFX:Save()
+        end
+        
+        MenuHelper:AddMultipleChoice({
+			id = BetterLightFX.name .. "idleEvent",
+			title = BetterLightFX.name .. "idleEvent_title",
+			desc = BetterLightFX.name .. "idleEvent_desc",
+			callback = "blfx_IdleEventChange",
+			menu_id = BetterLightFX.menuOptions,
+			value = BetterLightFX.Options.IdleEvent,
+			items = BetterLightFX:GetSubVariableFromArray(BetterLightFX.IdleEventModOptions, "event_name", "blfx_"),
+			priority = 995
+		})
+        
+        
+        MenuCallbackHandler.blfx_createIdleEventMenuItems = function(this, item)
+            local node = nodes[BetterLightFX.menuIdleEventOptions]
+            
+            node:set_items({})
+            
+            local eventData = BetterLightFX.IdleEventModOptions[BetterLightFX.Options.IdleEvent]
+            
+            if eventData and eventData.options then
+                for param, opt in pairs(eventData.options) do 
+                    BetterLightFX:CreateEventOptionButton(node, {
+                        event = eventData.event_name, 
+                        typ = opt.typ, 
+                        value = BetterLightFX:GetIdleEventParamaterValue(eventData.event_name, param),
+                        param = param, 
+                        localization = opt.localization,
+                        valMin = opt.minVal or 0,
+                        valMax = opt.maxVal or 0
+                    })
+                end
+            end
+            
+            managers.menu:add_back_button(node)
+            
+            local selected_node = managers.menu:active_menu().logic:selected_node()
+            managers.menu:active_menu().renderer:refresh_node(selected_node)
+            local selected_item = selected_node:selected_item()
+            selected_node:select_item(selected_item and selected_item:name())
+            managers.menu:active_menu().renderer:highlight_item(selected_item)
+        end
+        
+        MenuHelper:AddButton({
+                id = "IdleEvents",
+                title = BetterLightFX.name .. "IdleEvents_title",
+                desc = BetterLightFX.name .. "IdleEvents_desc",
+                callback = "blfx_createIdleEventMenuItems",
+                next_node = BetterLightFX.menuIdleEventOptions,
+                menu_id = BetterLightFX.menuOptions,
+                priority = 994
+            })
+    
+        MenuHelper:AddDivider({
+                id = "IdleEventsDivider",
+                size = 16,
+                menu_id = BetterLightFX.menuIdleEventOptions,
+                priority = 993,
+            })
     
         MenuCallbackHandler.blfx_createEventModMenuItems = function(this, item)
             BetterLightFX.currentEvent = item:name() == (BetterLightFX.name .. "events") and item:value() or BetterLightFX.currentEvent or 1
@@ -936,7 +1162,7 @@ if Hooks then
                 callback = "blfx_createEventModMenuItems",
                 next_node = BetterLightFX.menuEventOptions,
                 menu_id = BetterLightFX.menuOptions,
-                priority = 995
+                priority = 992
             })
             
             --Event base items
@@ -974,7 +1200,11 @@ if Hooks then
             
             BetterLightFX:Save()
             
-            BetterLightFX.events[event][param][color] = item:value() / 255
+            if BetterLightFX.events[event] then
+                BetterLightFX.events[event][param][color] = item:value() / 255
+            elseif BetterLightFX.idle_events[event] then
+                BetterLightFX.idle_events[event][param][color] = item:value() / 255
+            end
         end
         
         MenuCallbackHandler.blfx_EventNumberCallback = function(this, item)
@@ -986,7 +1216,11 @@ if Hooks then
             
             BetterLightFX:Save()
             
-            BetterLightFX.events[event][param] = item:value()
+            if BetterLightFX.events[event] then
+                BetterLightFX.events[event][param] = item:value()
+            elseif BetterLightFX.idle_events[event] then
+                BetterLightFX.idle_events[event][param] = item:value()
+            end
         end
         
         MenuCallbackHandler.blfx_EventBoolCallback = function(this, item)
@@ -998,7 +1232,11 @@ if Hooks then
             
             BetterLightFX:Save()
             
-            BetterLightFX.events[event][param] = item:value() == "on" and true or false
+            if BetterLightFX.events[event] then
+                BetterLightFX.events[event][param] = item:value() == "on" and true or false
+            elseif BetterLightFX.idle_events[event] then
+                BetterLightFX.idle_events[event][param] = item:value() == "on" and true or false
+            end
         end
         
     end)
@@ -1007,6 +1245,7 @@ if Hooks then
 		nodes[BetterLightFX.menuOptions] = MenuHelper:BuildMenu(BetterLightFX.menuOptions)
 		MenuHelper:AddMenuItem(MenuHelper.menus.lua_mod_options_menu, BetterLightFX.menuOptions, BetterLightFX.name .. "MainOptionsButton", BetterLightFX.name .. "MainOptionsButtonDescription", 1)
         nodes[BetterLightFX.menuEventOptions] = MenuHelper:BuildMenu(BetterLightFX.menuEventOptions)
+        nodes[BetterLightFX.menuIdleEventOptions] = MenuHelper:BuildMenu(BetterLightFX.menuIdleEventOptions)
     end)
 
 end
