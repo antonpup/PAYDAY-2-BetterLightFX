@@ -10,7 +10,7 @@ if not _G.BetterLightFX then
     BetterLightFX.LOG_LEVEL_DEBUG = 3
     BetterLightFX.debug_enabled = true
     BetterLightFX.debug_systemprint = false
-    BetterLightFX.debug_level = BetterLightFX.LOG_LEVEL_WARNING
+    BetterLightFX.debug_level = BetterLightFX.LOG_LEVEL_DEBUG
     
     --Core
     BetterLightFX.current_color = Color.White
@@ -20,7 +20,6 @@ if not _G.BetterLightFX then
     BetterLightFX._current_blend_amount = 0
     BetterLightFX.is_setting_color = false
     BetterLightFX._last_light_set_at = 0
-    BetterLightFX.min_wait_time = 0.01
     BetterLightFX.idle_events = {}
     BetterLightFX.events = {}
     BetterLightFX.running_events = {}
@@ -131,7 +130,6 @@ function BetterLightFX:InitEvents()
         },
         run = function(self, ...)
             BetterLightFX:SetColor(0, 0, 0, 0, nil) --nil because Idle events can only run when there is no active event
-            coroutine.yield()
             self._ran_once = true
         end})
     
@@ -141,7 +139,6 @@ function BetterLightFX:InitEvents()
             _color = {typ = "color", localization = "Color"},
             _pulsing = {typ = "bool", localization = "Pulse"},
             _pulserate = {typ = "number", localization = "Pulse Rate", minVal = 0, maxVal = 3},
-            
         },
         run = function(self, ...)
             local dt = coroutine.yield()
@@ -217,7 +214,7 @@ function BetterLightFX:InitEvents()
         end})
     
     --Regular Events
-    BetterLightFX:RegisterEvent("Suspicion", {priority = 1, enabled = true, loop = false, _color = Color(1, 1, 1, 1), 
+    BetterLightFX:RegisterEvent("Suspicion", {priority = 1, enabled = true, loop = true, _color = Color(1, 1, 1, 1), 
         options = {
             enabled = {typ = "bool", localization = "Enabled"}
         },
@@ -239,7 +236,7 @@ function BetterLightFX:InitEvents()
             self._ran_once = true
         end})
         
-    BetterLightFX:RegisterEvent("PointOfNoReturn", {priority = 3, enabled = true, loop = false, _color = Color(1, 1, 1, 1), 
+    BetterLightFX:RegisterEvent("PointOfNoReturn", {priority = 3, enabled = true, loop = true, _color = Color(1, 1, 1, 1), 
         options = {
             enabled = {typ = "bool", localization = "Enabled"}
         }, 
@@ -260,13 +257,11 @@ function BetterLightFX:InitEvents()
             
             local t = self._t
             while t > 0 do
+                BetterLightFX:SetColor(used_color.red, used_color.green, used_color.blue, (t / self._t), self.name)
                 local dt = coroutine.yield()
                 t = t - dt
-                BetterLightFX:SetColor(used_color.red, used_color.green, used_color.blue, (t / self._t), self.name)
             end
             
-            coroutine.yield()
-            BetterLightFX:EndEvent(self.name)
             self._ran_once = true
         end})
         
@@ -289,7 +284,7 @@ function BetterLightFX:InitEvents()
         run = function(self, ...)
             BetterLightFX:SetColor(self._color.red, self._color.green, self._color.blue, self._progress, self.name)
             
-            if self._progress < 0.05 then
+            if self._progress >= 1 then
                 BetterLightFX:EndEvent(self.name)
             end
             
@@ -485,7 +480,9 @@ function BetterLightFX:CreateCoroutine()
                     if self.events[self._current_event].loop then
                         self.events[self._current_event]:run()
                     else
-                        if not self.events[self._current_event]._ran_once then
+                        if self.events[self._current_event]._ran_once then
+                            BetterLightFX:EndEvent(self._current_event)
+                        else
                             self.events[self._current_event]:run()
                         end
                     end
@@ -675,17 +672,17 @@ function BetterLightFX:StartEvent(name)
         self._current_event = name
         self.events[name]._ran_once = false
         table.insert(self.running_events, name)
+        BetterLightFX:PrintDebug("[BetterLightFX] Event started, " .. name, BetterLightFX.LOG_LEVEL_DEBUG)
     elseif not self._current_event then
         self._current_event = name
         self.events[name]._ran_once = false
         table.insert(self.running_events, name)
+        BetterLightFX:PrintDebug("[BetterLightFX] Event started, " .. name, BetterLightFX.LOG_LEVEL_DEBUG)
     end
-    --BetterLightFX:PrintDebug("[BetterLightFX] Event started, " .. name, BetterLightFX.LOG_LEVEL_DEBUG)
 end
 
 function BetterLightFX:EndEvent(name)
     --BetterLightFX:PrintDebug("[BetterLightFX] Ending event, " .. name, BetterLightFX.LOG_LEVEL_DEBUG)
-    
     if not self:DoesEventExist(name) then
         return
     end
@@ -695,13 +692,16 @@ function BetterLightFX:EndEvent(name)
         BetterLightFX:RemoveRunningEvent(name)
         
         self._current_event = BetterLightFX:GetNextRunningEvent()
+        BetterLightFX:PrintDebug("[BetterLightFX] Event ended, " .. name, BetterLightFX.LOG_LEVEL_DEBUG)
+        
+        if self._current_event then
+            BetterLightFX:PrintDebug("[BetterLightFX] Restored Event, " .. self._current_event, BetterLightFX.LOG_LEVEL_DEBUG)
+        end
     end
-    
-    --BetterLightFX:PrintDebug("[BetterLightFX] Event ended, " .. name, BetterLightFX.LOG_LEVEL_DEBUG)
 end
 
 function BetterLightFX:UpdateEvent(name, parameters)
-     BetterLightFX:PrintDebug("[BetterLightFX] Updating event, " .. name, BetterLightFX.LOG_LEVEL_DEBUG)
+    --BetterLightFX:PrintDebug("[BetterLightFX] Updating event, " .. name, BetterLightFX.LOG_LEVEL_DEBUG)
     if not self:DoesEventExist(name) then
         return
     end
@@ -720,7 +720,7 @@ function BetterLightFX:PushColor(color, event)
         return
     end
     
-    if os.clock() - BetterLightFX._last_light_set_at < BetterLightFX.min_wait_time then
+    if os.clock() - BetterLightFX._last_light_set_at < BetterLightFX.Options.LEDRefreshRate then
         return
     end
     
@@ -733,15 +733,23 @@ function BetterLightFX:PushColor(color, event)
     if color then
         if color.red > 1 then
             color.red = color.red / 255.0
+        elseif color.red < 0 then
+            color.red = 0
         end
         if color.green > 1 then
             color.green = color.green / 255.0
+        elseif color.green < 0 then
+            color.green = 0
         end
         if color.blue > 1 then
             color.blue = color.blue / 255.0
+        elseif color.blue < 0 then
+            color.blue = 0
         end
         if color.alpha > 1 then
             color.alpha = color.alpha / 255.0
+        elseif color.alpha < 0 then
+            color.alpha = 0
         end
     end
     
@@ -943,6 +951,8 @@ if Hooks then
 			[BetterLightFX.name .. "color_scheme_desc"] = "Allows for selection of preferred coloring, in the event that you do not have an RGB device",
             [BetterLightFX.name .. "monochrome_brightness_title"] = "Monochrome Brightness",
 			[BetterLightFX.name .. "monochrome_brightness_desc"] = "Adjusts the brightness for monochrome color scheme",
+            [BetterLightFX.name .. "led_refresh_rate_title"] = "Lights Update Rate",
+			[BetterLightFX.name .. "led_refresh_rate_desc"] = "The rate at which lights are updated per second (Less = smooth effects, high performance impact, More = choppy effects, lower performance impact)",
             [BetterLightFX.name .. "idleEvent_title"] = "Idle Action",
 			[BetterLightFX.name .. "idleEvent_desc"] = "When lights are not being set, this event will be played",
             [BetterLightFX.name .. "IdleEvents_title"] = "Idle Settings",
@@ -1010,6 +1020,32 @@ if Hooks then
             size = 16,
             menu_id = BetterLightFX.menuOptions,
             priority = 999,
+        })
+        
+        MenuCallbackHandler.blfx_LEDRefreshRate_Changed = function(this, item)
+            BetterLightFX.Options.LEDRefreshRate = item:value()
+            BetterLightFX:Save()
+        end
+        
+        MenuHelper:AddSlider({
+            id = BetterLightFX.name .. "led_refresh_rate",
+            title = BetterLightFX.name .. "led_refresh_rate_title",
+            desc = BetterLightFX.name .. "led_refresh_rate_desc",
+            callback = "blfx_LEDRefreshRate_Changed",
+            menu_id = BetterLightFX.menuOptions,
+            value = BetterLightFX.Options.LEDRefreshRate,
+            min = 0.001,
+            max = 0.1,
+            step = 0.001,
+            show_value = true,
+            priority = 998
+        })
+        
+        MenuHelper:AddDivider({
+            id = "LEDRefreshRateDivider",
+            size = 16,
+            menu_id = BetterLightFX.menuOptions,
+            priority = 998,
         })
         
         MenuCallbackHandler.blfx_colorSchemeChange = function(this, item)
