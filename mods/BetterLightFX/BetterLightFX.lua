@@ -13,11 +13,12 @@ if not _G.BetterLightFX then
     BetterLightFX.debug_level = BetterLightFX.LOG_LEVEL_DEBUG
     
     --Core
+    BetterLightFX.routine = nil -- Main routine
     BetterLightFX.current_color = Color.White
     BetterLightFX._current_event = nil
+    BetterLightFX.blendroutine = nil -- Blend routine
     BetterLightFX.current_blend_color = Color.White
     BetterLightFX._current_blend_event = nil
-    BetterLightFX._current_blend_amount = 0
     BetterLightFX.is_setting_color = false
     BetterLightFX._last_light_set_at = 0
     BetterLightFX.idle_events = {}
@@ -242,7 +243,7 @@ function BetterLightFX:InitEvents()
         }, 
         run = function(self, ...) self._ran_once = true end})
         
-    BetterLightFX:RegisterEvent("TakenDamage", {priority = 4, enabled = true, loop = false, _use_custom_color = false, _custom_color = Color(1, 1, 0.313, 0), _color = Color(1, 1, 0.313, 0), _t = 0.6,
+    BetterLightFX:RegisterEvent("TakenDamage", {priority = 4, enabled = true, blend = true, loop = false, _use_custom_color = false, _custom_color = Color(1, 1, 0.313, 0), _color = Color(1, 1, 0.313, 0), _t = 0.6,
         options = {
             enabled = {typ = "bool", localization = "Enabled"}, 
             _use_custom_color = {typ = "bool", localization = "Use Custom Color"}, 
@@ -265,7 +266,7 @@ function BetterLightFX:InitEvents()
             self._ran_once = true
         end})
         
-    BetterLightFX:RegisterEvent("TakenSevereDamage", {priority = 5, enabled = true, loop = true, _color = Color(1, 1, 0, 0), _hurtamount = 0, 
+    BetterLightFX:RegisterEvent("TakenSevereDamage", {priority = 5, enabled = true, blend = true, loop = true, _color = Color(1, 1, 0, 0), _hurtamount = 0, 
         options = {
             enabled = {typ = "bool", localization = "Enabled"}, 
             _color = {typ = "color", localization = "Color"}
@@ -309,7 +310,7 @@ function BetterLightFX:InitEvents()
             self._ran_once = true
         end})
         
-    BetterLightFX:RegisterEvent("Electrocuted", {priority = 8, enabled = true, loop = true, _color = Color(1, 0, 0.80, 1), use_custom_color = false, _random_color = Color(1, 1, 1, 1), _alpha_fade_mod = 0,
+    BetterLightFX:RegisterEvent("Electrocuted", {priority = 8, enabled = true, blend = true, loop = true, _color = Color(1, 0, 0.80, 1), use_custom_color = false, _random_color = Color(1, 1, 1, 1), _alpha_fade_mod = 0,
         options = {
             enabled = {typ = "bool", localization = "Enabled"}, 
             use_custom_color = {typ = "bool", localization = "Use Custom Color Instead"}, 
@@ -327,7 +328,7 @@ function BetterLightFX:InitEvents()
             self._ran_once = true
         end})
         
-    BetterLightFX:RegisterEvent("Flashbang", {priority = 9, enabled = true, loop = true, _color = Color(1, 1, 1, 1), _flashamount = 0, 
+    BetterLightFX:RegisterEvent("Flashbang", {priority = 9, enabled = true, blend = true, loop = true, _color = Color(1, 1, 1, 1), _flashamount = 0, 
         options = {
             enabled = {typ = "bool", localization = "Enabled"}, 
             _color = {typ = "color", localization = "Color"}
@@ -366,7 +367,7 @@ function BetterLightFX:InitEvents()
             end
         end})
         
-    BetterLightFX:RegisterEvent("LevelUp", {priority = 11, enabled = true, loop = false, _color = Color(1, 0, 0, 1),
+    BetterLightFX:RegisterEvent("LevelUp", {priority = 11, enabled = true, blend = true, loop = false, _color = Color(1, 0, 0, 1),
         options = {
             enabled = {typ = "bool", localization = "Enabled"},
             _color = {typ = "color", localization = "Color"}
@@ -391,7 +392,7 @@ function BetterLightFX:InitEvents()
             self._ran_once = true
         end})
         
-    BetterLightFX:RegisterEvent("SafeDrilled", {priority = 12, enabled = true, loop = false, _color = Color(1, 1, 1, 1), _duration = 5,
+    BetterLightFX:RegisterEvent("SafeDrilled", {priority = 12, enabled = true, blend = true, loop = false, _color = Color(1, 1, 1, 1), _duration = 5,
         options = {
             enabled = {typ = "bool", localization = "Enabled"},
             _duration = {typ = "number", localization = "Light Duration (Seconds)", maxVal = 30}
@@ -424,51 +425,80 @@ function BetterLightFX:Processor()
     BetterLightFX:CreateCoroutine()
     
     Hooks:Add("MenuUpdate", "MenuUpdate_BetterLightFX", function( t, dt )
-        if BetterLightFX.routine and coroutine.status(BetterLightFX.routine) ~= "dead" then
-            if coroutine.status(BetterLightFX.routine) == "suspended" then
-                local success, errorMessage = coroutine.resume(BetterLightFX.routine, dt)
-                
-                if not success then -- check if there is an error
-                    log("There was an error in main: " .. errorMessage)
-                end
-            end
-        elseif not BetterLightFX.routine or coroutine.status(BetterLightFX.routine) == "dead" then
-            BetterLightFX:CreateCoroutine()
-            
-            if coroutine.status(BetterLightFX.routine) == "suspended" then
-                local success, errorMessage = coroutine.resume(BetterLightFX.routine, dt)
-                
-                if not success then -- check if there is an error
-                    log("There was an error in main: " .. errorMessage)
-                end
-            end
-        end
-        --BetterLightFX:PrintDebug("Status of self.routine " .. coroutine.status(BetterLightFX.routine), BetterLightFX.LOG_LEVEL_DEBUG)
+        BetterLightFX:Tick( t, dt )
     end)
 
     Hooks:Add("GameSetupUpdate", "GameSetupUpdate_BetterLightFX", function( t, dt )
-        if BetterLightFX.routine and coroutine.status(BetterLightFX.routine) ~= "dead" then
-            if coroutine.status(BetterLightFX.routine) == "suspended" then
-                local success, errorMessage = coroutine.resume(BetterLightFX.routine, dt)
-                
-                if not success then -- check if there is an error
-                    log("There was an error in main: " .. errorMessage)
-                end
-            end
-        elseif not BetterLightFX.routine or coroutine.status(BetterLightFX.routine) == "dead" then
-            BetterLightFX:CreateCoroutine()
-            
-            if coroutine.status(BetterLightFX.routine) == "suspended" then
-                local success, errorMessage = coroutine.resume(BetterLightFX.routine, dt)
-                
-                if not success then -- check if there is an error
-                    log("There was an error in main: " .. errorMessage)
-                end
-            end
-        end
-        --BetterLightFX:PrintDebug("Status of self.routine " .. coroutine.status(BetterLightFX.routine), BetterLightFX.LOG_LEVEL_DEBUG)
+        BetterLightFX:Tick( t, dt )
     end)
 end
+
+function BetterLightFX:Tick( t, dt )
+    
+    --Blending
+    if self._current_blend_event and self.events[self._current_blend_event] then
+        
+        if self.blendroutine and coroutine.status(self.blendroutine) == "suspended" then
+            local success, errorMessage = coroutine.resume(self.blendroutine, dt)
+            
+            if not success then -- check if there is an error
+                log("There was an error in blend routine: " .. errorMessage)
+            end
+        else
+            self.blendroutine = coroutine.create(function(dt)
+                while true do
+                    if self._current_blend_event then
+                        if self.events[self._current_blend_event] then
+                            
+                            if self.events[self._current_blend_event].loop then
+                                self.events[self._current_blend_event]:run()
+                            else
+                                if self.events[self._current_blend_event]._ran_once then
+                                    BetterLightFX:EndEvent(self._current_blend_event)
+                                else
+                                    self.events[self._current_blend_event]:run()
+                                end
+                            end
+                        end
+                        --BetterLightFX:PrintDebug("Ran " .. self._current_event, BetterLightFX.LOG_LEVEL_DEBUG)
+                        coroutine.yield()
+                    end
+                end
+            end)
+            
+            local success, errorMessage = coroutine.resume(self.blendroutine, dt)
+            
+            if not success then -- check if there is an error
+                log("There was an error in blend routine: " .. errorMessage)
+            end
+        end
+        
+    end
+    
+    
+    --Events
+    if BetterLightFX.routine and coroutine.status(BetterLightFX.routine) ~= "dead" then
+        if coroutine.status(BetterLightFX.routine) == "suspended" then
+            local success, errorMessage = coroutine.resume(BetterLightFX.routine, dt)
+            
+            if not success then -- check if there is an error
+                log("There was an error in main: " .. errorMessage)
+            end
+        end
+    elseif not BetterLightFX.routine or coroutine.status(BetterLightFX.routine) == "dead" then
+        BetterLightFX:CreateCoroutine()
+        
+        if coroutine.status(BetterLightFX.routine) == "suspended" then
+            local success, errorMessage = coroutine.resume(BetterLightFX.routine, dt)
+            
+            if not success then -- check if there is an error
+                log("There was an error in main: " .. errorMessage)
+            end
+        end
+    end
+    --BetterLightFX:PrintDebug("Status of self.routine " .. coroutine.status(BetterLightFX.routine), BetterLightFX.LOG_LEVEL_DEBUG)
+end
+
 
 function BetterLightFX:CreateCoroutine()
     BetterLightFX.routine = coroutine.create(function(dt)
@@ -664,6 +694,25 @@ function BetterLightFX:StartEvent(name)
         return
     end
     
+    if self.events[name].blend then
+        
+        if self._current_blend_event and self.events[self._current_blend_event].priority < self.events[name].priority then
+            self._current_blend_event = name
+            BetterLightFX.blendroutine = nil
+            self.events[name]._ran_once = false
+            --table.insert(self.running_events, name)
+            BetterLightFX:PrintDebug("[BetterLightFX] Blend event started, " .. name, BetterLightFX.LOG_LEVEL_DEBUG)
+        elseif not self._current_blend_event then
+            self._current_blend_event = name
+            BetterLightFX.blendroutine = nil
+            self.events[name]._ran_once = false
+            --table.insert(self.running_events, name)
+            BetterLightFX:PrintDebug("[BetterLightFX] Blend event started, " .. name, BetterLightFX.LOG_LEVEL_DEBUG)
+        end
+        
+        return
+    end
+    
     if self._current_event and self._current_event == name then
         return
     end
@@ -687,7 +736,12 @@ function BetterLightFX:EndEvent(name)
         return
     end
     
-    if self._current_event and self._current_event == name then
+    if self._current_blend_event and self._current_blend_event == name then
+        self._current_blend_event = nil
+        BetterLightFX.blendroutine = nil
+        BetterLightFX:PrintDebug("[BetterLightFX] Blend event ended, " .. name, BetterLightFX.LOG_LEVEL_DEBUG)
+        
+    elseif self._current_event and self._current_event == name then
         
         BetterLightFX:RemoveRunningEvent(name)
         
@@ -697,6 +751,8 @@ function BetterLightFX:EndEvent(name)
         if self._current_event then
             BetterLightFX:PrintDebug("[BetterLightFX] Restored Event, " .. self._current_event, BetterLightFX.LOG_LEVEL_DEBUG)
         end
+    elseif self._current_blend_event and self._current_blend_event == name then
+        
     end
 end
 
@@ -720,6 +776,11 @@ function BetterLightFX:PushColor(color, event)
         return
     end
     
+    if self._current_blend_event and self._current_blend_event == event then
+        self.current_blend_color = color
+        return
+    end
+    
     if os.clock() - BetterLightFX._last_light_set_at < BetterLightFX.Options.LEDRefreshRate then
         return
     end
@@ -727,6 +788,18 @@ function BetterLightFX:PushColor(color, event)
     --Color is already being set
     if BetterLightFX.is_setting_color then
         return
+    end
+    
+    --Blend the colors
+    if self._current_blend_event then
+        local tempColor = Color(0, 0, 0, 0)
+        tempColor.alpha = 1 - (1 - self.current_blend_color.alpha) * (1 - color.alpha)
+        if tempColor.alpha > 0 then
+            tempColor.red = self.current_blend_color.red * self.current_blend_color.alpha / tempColor.alpha + color.red * color.alpha * (1 - self.current_blend_color.alpha) / tempColor.alpha;
+            tempColor.green = self.current_blend_color.green * self.current_blend_color.alpha / tempColor.alpha + color.green * color.alpha * (1 - self.current_blend_color.alpha) / tempColor.alpha;
+            tempColor.blue = self.current_blend_color.blue * self.current_blend_color.alpha / tempColor.alpha + color.blue * color.alpha * (1 - self.current_blend_color.alpha) / tempColor.alpha;
+        end
+        color = tempColor
     end
     
     --Standardize the color
