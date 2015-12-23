@@ -9,8 +9,8 @@ if not _G.BetterLightFX then
     BetterLightFX.LOG_LEVEL_WARNING = 2
     BetterLightFX.LOG_LEVEL_DEBUG = 3
     BetterLightFX.debug_enabled = true
-    BetterLightFX.debug_systemprint = false
-    BetterLightFX.debug_level = BetterLightFX.LOG_LEVEL_DEBUG
+    BetterLightFX.debug_systemprint = true
+    BetterLightFX.debug_level = BetterLightFX.LOG_LEVEL_WARNING
     
     --Core
     BetterLightFX.routine = nil -- Main routine
@@ -155,10 +155,28 @@ function BetterLightFX:InitEvents()
             self._ran_once = true
         end})
     
+    BetterLightFX:RegisterIdleEvent("TwoColorFade", {_color1 = Color(1, 1, 1, 1), _color2 = Color(1, 1, 1, 1), _brightness = 1, _speed = 1, _current_fade = 0,
+        options = {
+            _brightness = {typ = "number", localization = "Brightness", minVal = 0, maxVal = 1},
+            _color1 = {typ = "color", localization = "First Color"},
+            _color2 = {typ = "color", localization = "Second Color"},
+            _speed = {typ = "number", localization = "Fade Speed", minVal = 0, maxVal = 2},
+        },
+        run = function(self, ...)
+            
+            local sine = math.pow( math.sin( self._current_fade * ( 180 * self._speed ) ), 2 )
+            local cosine = math.pow( math.cos( self._current_fade * ( 180 * self._speed ) ), 2 )
+            
+            BetterLightFX:SetColor(math.min((self._color1.red * sine) + (self._color2.red * cosine), 1), math.min((self._color1.green * sine) + (self._color2.green * cosine), 1), math.min((self._color1.blue * sine) + (self._color2.blue * cosine), 1), self._brightness, nil)
+            
+            self._current_fade = self._current_fade + coroutine.yield()
+            self._ran_once = true
+        end})
+    
     BetterLightFX:RegisterIdleEvent("Rainbow", {_step = 0 , _speed = 1, _brightness = 1,
         options = {
             _brightness = {typ = "number", localization = "Brightness", minVal = 0, maxVal = 1},
-            _speed = {typ = "number", localization = "Rainbow Speed", minVal = 0.1, maxVal = 3},
+            _speed = {typ = "number", localization = "Rainbow Speed", minVal = 0.1, maxVal = 2},
         },
         run = function(self, ...)
             
@@ -434,6 +452,7 @@ function BetterLightFX:Processor()
 end
 
 function BetterLightFX:Tick( t, dt )
+    local debug_clockstart = os.clock() --DEBUG
     
     --Blending
     if self._current_blend_event and self.events[self._current_blend_event] then
@@ -444,7 +463,7 @@ function BetterLightFX:Tick( t, dt )
             if not success then -- check if there is an error
                 log("There was an error in blend routine: " .. errorMessage)
             end
-        else
+        elseif not self.blendroutine or coroutine.status(self.blendroutine) == "dead" then
             self.blendroutine = coroutine.create(function(dt)
                 while true do
                     if self._current_blend_event then
@@ -497,10 +516,13 @@ function BetterLightFX:Tick( t, dt )
         end
     end
     --BetterLightFX:PrintDebug("Status of self.routine " .. coroutine.status(BetterLightFX.routine), BetterLightFX.LOG_LEVEL_DEBUG)
+    
+    BetterLightFX:PrintDebugElapsed(os.clock() - debug_clockstart, "BetterLightFX:Tick", BetterLightFX.LOG_LEVEL_WARNING) --DEBUG
 end
 
 
 function BetterLightFX:CreateCoroutine()
+    local debug_clockstart = os.clock() --DEBUG
     BetterLightFX.routine = coroutine.create(function(dt)
         while true do
             if self._current_event then
@@ -527,6 +549,8 @@ function BetterLightFX:CreateCoroutine()
             coroutine.yield()
         end
     end)
+    
+    BetterLightFX:PrintDebugElapsed(os.clock() - debug_clockstart, "BetterLightFX:CreateCoroutine", BetterLightFX.LOG_LEVEL_WARNING) --DEBUG
 end
 
 function BetterLightFX:wait(seconds, fixed_dt)
@@ -538,6 +562,7 @@ function BetterLightFX:wait(seconds, fixed_dt)
 end
 
 function BetterLightFX:RegisterEvent(name, parameters, override)
+    local debug_clockstart = os.clock() --DEBUG
     if self.events[name] and not override then
         BetterLightFX:PrintDebug("[BetterLightFX] Cannot replace existing event, " .. name, BetterLightFX.LOG_LEVEL_INFO)
         return
@@ -575,9 +600,11 @@ function BetterLightFX:RegisterEvent(name, parameters, override)
     end
     
     BetterLightFX:PrintDebug("[BetterLightFX] Registered event " .. name, BetterLightFX.LOG_LEVEL_INFO)
+    BetterLightFX:PrintDebugElapsed(os.clock() - debug_clockstart, "BetterLightFX:RegisterEvent", BetterLightFX.LOG_LEVEL_WARNING) --DEBUG
 end
 
 function BetterLightFX:RegisterIdleEvent(name, parameters)
+    local debug_clockstart = os.clock() --DEBUG
     if self.idle_events[name] then
         BetterLightFX:PrintDebug("[BetterLightFX] Cannot replace existing idle event, " .. name, BetterLightFX.LOG_LEVEL_INFO)
         return
@@ -619,6 +646,7 @@ function BetterLightFX:RegisterIdleEvent(name, parameters)
     end
     
     BetterLightFX:PrintDebug("[BetterLightFX] Registered idle event " .. name, BetterLightFX.LOG_LEVEL_INFO)
+    BetterLightFX:PrintDebugElapsed(os.clock() - debug_clockstart, "BetterLightFX:RegisterIdleEvent", BetterLightFX.LOG_LEVEL_WARNING) --DEBUG
 end
 
 function BetterLightFX:GetNextRunningEvent()
@@ -685,6 +713,7 @@ function BetterLightFX:DoesIdleEventExist(name)
 end
 
 function BetterLightFX:StartEvent(name)
+    local debug_clockstart = os.clock() --DEBUG
     --BetterLightFX:PrintDebug("[BetterLightFX] Starting event, " .. name, BetterLightFX.LOG_LEVEL_DEBUG)
     if not self:DoesEventExist(name) then
         return
@@ -722,15 +751,22 @@ function BetterLightFX:StartEvent(name)
         self.events[name]._ran_once = false
         table.insert(self.running_events, name)
         BetterLightFX:PrintDebug("[BetterLightFX] Event started, " .. name, BetterLightFX.LOG_LEVEL_DEBUG)
+    elseif self._current_event and self.events[self._current_event].priority >= self.events[name].priority then
+        self.events[name]._ran_once = false
+        table.insert(self.running_events, name)
+        BetterLightFX:PrintDebug("[BetterLightFX] Event appended to running list, " .. name, BetterLightFX.LOG_LEVEL_DEBUG)
     elseif not self._current_event then
         self._current_event = name
         self.events[name]._ran_once = false
         table.insert(self.running_events, name)
         BetterLightFX:PrintDebug("[BetterLightFX] Event started, " .. name, BetterLightFX.LOG_LEVEL_DEBUG)
     end
+    
+    BetterLightFX:PrintDebugElapsed(os.clock() - debug_clockstart, "BetterLightFX:StartEvent", BetterLightFX.LOG_LEVEL_WARNING) --DEBUG
 end
 
 function BetterLightFX:EndEvent(name)
+    local debug_clockstart = os.clock() --DEBUG
     --BetterLightFX:PrintDebug("[BetterLightFX] Ending event, " .. name, BetterLightFX.LOG_LEVEL_DEBUG)
     if not self:DoesEventExist(name) then
         return
@@ -754,9 +790,12 @@ function BetterLightFX:EndEvent(name)
     elseif self._current_blend_event and self._current_blend_event == name then
         
     end
+    
+    BetterLightFX:PrintDebugElapsed(os.clock() - debug_clockstart, "BetterLightFX:EndEvent", BetterLightFX.LOG_LEVEL_WARNING) --DEBUG
 end
 
 function BetterLightFX:UpdateEvent(name, parameters)
+    local debug_clockstart = os.clock() --DEBUG
     --BetterLightFX:PrintDebug("[BetterLightFX] Updating event, " .. name, BetterLightFX.LOG_LEVEL_DEBUG)
     if not self:DoesEventExist(name) then
         return
@@ -767,6 +806,7 @@ function BetterLightFX:UpdateEvent(name, parameters)
     end
     
      --BetterLightFX:PrintDebug("[BetterLightFX] Event updated, " .. name, BetterLightFX.LOG_LEVEL_DEBUG)
+     BetterLightFX:PrintDebugElapsed(os.clock() - debug_clockstart, "BetterLightFX:UpdateEvent", BetterLightFX.LOG_LEVEL_WARNING) --DEBUG
 end
 
 function BetterLightFX:PushColor(color, event)
@@ -842,7 +882,7 @@ function BetterLightFX:PushColor(color, event)
             mono_color = 0
         end
         
-        if BetterLightFX.ColorSchemeOptions[BetterLightFX.Options.ColorScheme].name  == "RED" and color.red + color.green + color.blue > 0 then
+        if BetterLightFX.ColorSchemeOptions[BetterLightFX.Options.ColorScheme].name  == "RED" then
             BetterLightFX.current_color = Color(color.alpha, mono_color, 0, 0) 
         elseif BetterLightFX.ColorSchemeOptions[BetterLightFX.Options.ColorScheme].name == "GREEN" then
             BetterLightFX.current_color = Color(color.alpha, 0, mono_color, 0) 
@@ -1037,6 +1077,7 @@ if Hooks then
             
             ["blfx_ColorsOut"] = "Dark",
             ["blfx_SingleColor"] = "Single Color",
+            ["blfx_TwoColorFade"] = "Two Color Fade",
             ["blfx_Rainbow"] = "Rainbow",
             
             ["BLFXevent_Suspicion"] = "Suspicion",

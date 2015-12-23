@@ -24,6 +24,19 @@ Hooks:PostHook( HUDAssaultCorner, "sync_set_assault_mode", "HUDAssaultCorner:syn
     end
 end )
 
+Hooks:PostHook( HUDAssaultCorner, "show_point_of_no_return_timer", "HUDAssaultCorner:show_point_of_no_return_timer_BetterLightFX", function()
+    if BetterLightFX then
+        BetterLightFX:StartEvent("PointOfNoReturn")
+    end
+end )
+
+Hooks:PostHook( HUDAssaultCorner, "hide_point_of_no_return_timer", "HUDAssaultCorner:hide_point_of_no_return_timer_BetterLightFX", function()
+    if BetterLightFX then
+        BetterLightFX:EndEvent("PointOfNoReturn")
+    end
+end )
+
+
 function HUDAssaultCorner:flash_point_of_no_return_timer(beep)
 	local function flash_timer(o)
 		local t = 0
@@ -35,15 +48,11 @@ function HUDAssaultCorner:flash_point_of_no_return_timer(beep)
 			local b = math.lerp(0 or self._point_of_no_return_color.b, 0.2, n)
 			o:set_color(Color(r, g, b))
             if BetterLightFX then
-                BetterLightFX:StartEvent("PointOfNoReturn")
                 BetterLightFX:SetColor(r, g, b, 1, "PointOfNoReturn")
             end
             
 			o:set_font_size(math.lerp(tweak_data.hud_corner.noreturn_size, tweak_data.hud_corner.noreturn_size * 1.25, n))
 		end
-        if BetterLightFX then
-            BetterLightFX:EndEvent("PointOfNoReturn")
-        end
 	end
 	local point_of_no_return_timer = self._noreturn_bg_box:child("point_of_no_return_timer")
 	point_of_no_return_timer:animate(flash_timer)
