@@ -136,10 +136,10 @@ function BetterLightFX:InitEvents()
     
     BetterLightFX:RegisterIdleEvent("SingleColor", {_color = Color(1, 1, 1, 1), _brightness = 1, _pulsing = false, _pulserate = 1, _t = 3,
         options = {
-            _brightness = {typ = "number", localization = "Brightness", minVal = 0, maxVal = 1},
-            _color = {typ = "color", localization = "Color"},
-            _pulsing = {typ = "bool", localization = "Pulse"},
-            _pulserate = {typ = "number", localization = "Pulse Rate", minVal = 0, maxVal = 3},
+            {parameter = "_brightness", typ = "number", localization = "Brightness", minVal = 0, maxVal = 1},
+            {parameter = "_color", typ = "color", localization = "Color"},
+            {parameter = "_pulsing", typ = "bool", localization = "Pulse"},
+            {parameter = "_pulserate", typ = "number", localization = "Pulse Rate", minVal = 0, maxVal = 3},
         },
         run = function(self, ...)
             local dt = coroutine.yield()
@@ -157,10 +157,10 @@ function BetterLightFX:InitEvents()
     
     BetterLightFX:RegisterIdleEvent("TwoColorFade", {_color1 = Color(1, 1, 1, 1), _color2 = Color(1, 1, 1, 1), _brightness = 1, _speed = 1, _current_fade = 0,
         options = {
-            _brightness = {typ = "number", localization = "Brightness", minVal = 0, maxVal = 1},
-            _color1 = {typ = "color", localization = "First Color"},
-            _color2 = {typ = "color", localization = "Second Color"},
-            _speed = {typ = "number", localization = "Fade Speed", minVal = 0, maxVal = 2},
+            {parameter = "_brightness", typ = "number", localization = "Brightness", minVal = 0, maxVal = 1},
+            {parameter = "_speed", typ = "number", localization = "Fade Speed", minVal = 0, maxVal = 2},
+            {parameter = "_color1", typ = "color", localization = "First Color"},
+            {parameter = "_color2", typ = "color", localization = "Second Color"},
         },
         run = function(self, ...)
             
@@ -175,8 +175,8 @@ function BetterLightFX:InitEvents()
     
     BetterLightFX:RegisterIdleEvent("Rainbow", {_step = 0 , _speed = 1, _brightness = 1,
         options = {
-            _brightness = {typ = "number", localization = "Brightness", minVal = 0, maxVal = 1},
-            _speed = {typ = "number", localization = "Rainbow Speed", minVal = 0.1, maxVal = 2},
+             {parameter = "_brightness", typ = "number", localization = "Brightness", minVal = 0, maxVal = 1},
+             {parameter = "_speed", typ = "number", localization = "Rainbow Speed", minVal = 0.1, maxVal = 2},
         },
         run = function(self, ...)
             
@@ -235,15 +235,15 @@ function BetterLightFX:InitEvents()
     --Regular Events
     BetterLightFX:RegisterEvent("Suspicion", {priority = 1, enabled = true, loop = true, _color = Color(1, 1, 1, 1), 
         options = {
-            enabled = {typ = "bool", localization = "Enabled"}
+            {parameter = "enabled", typ = "bool", localization = "Enabled"},
         },
         run = function(self, ...)
             self._ran_once = true
         end})
         
-    BetterLightFX:RegisterEvent("AssaultIndicator", {priority = 2, enabled = true, loop = true, _color = Color(1, 1, 1, 1), _t = 3, 
+    BetterLightFX:RegisterEvent("AssaultIndicator", {priority = 20, enabled = true, loop = true, _color = Color(1, 1, 1, 1), _t = 3, 
         options = {
-            enabled = {typ = "bool", localization = "Enabled"}
+            {parameter = "enabled", typ = "bool", localization = "Enabled"},
         },
         run = function(self, ...)
             local dt = coroutine.yield()
@@ -255,17 +255,17 @@ function BetterLightFX:InitEvents()
             self._ran_once = true
         end})
         
-    BetterLightFX:RegisterEvent("PointOfNoReturn", {priority = 3, enabled = true, loop = true, _color = Color(1, 1, 1, 1), 
+    BetterLightFX:RegisterEvent("PointOfNoReturn", {priority = 30, enabled = true, loop = true, _color = Color(1, 1, 1, 1), 
         options = {
-            enabled = {typ = "bool", localization = "Enabled"}
+            {parameter = "enabled", typ = "bool", localization = "Enabled"},
         }, 
         run = function(self, ...) self._ran_once = true end})
         
-    BetterLightFX:RegisterEvent("TakenDamage", {priority = 4, enabled = true, blend = true, loop = false, _use_custom_color = false, _custom_color = Color(1, 1, 0.313, 0), _color = Color(1, 1, 0.313, 0), _t = 0.6,
+    BetterLightFX:RegisterEvent("TakenDamage", {priority = 40, enabled = true, blend = true, loop = false, _use_custom_color = false, _custom_color = Color(1, 1, 0.313, 0), _color = Color(1, 1, 0.313, 0), _t = 0.6,
         options = {
-            enabled = {typ = "bool", localization = "Enabled"}, 
-            _use_custom_color = {typ = "bool", localization = "Use Custom Color"}, 
-            _custom_color = {typ = "color", localization = "Color"}
+            {parameter = "enabled", typ = "bool", localization = "Enabled"},
+            {parameter = "_use_custom_color", typ = "bool", localization = "Use Custom Color"},
+            {parameter = "_custom_color", typ = "color", localization = "Color"},
         },
         run = function(self, ...)
             local used_color = self._color
@@ -284,10 +284,10 @@ function BetterLightFX:InitEvents()
             self._ran_once = true
         end})
         
-    BetterLightFX:RegisterEvent("TakenSevereDamage", {priority = 5, enabled = true, blend = true, loop = true, _color = Color(1, 1, 0, 0), _hurtamount = 0, 
+    BetterLightFX:RegisterEvent("TakenSevereDamage", {priority = 50, enabled = true, blend = true, loop = true, _color = Color(1, 1, 0, 0), _hurtamount = 0, 
         options = {
-            enabled = {typ = "bool", localization = "Enabled"}, 
-            _color = {typ = "color", localization = "Color"}
+            {parameter = "enabled", typ = "bool", localization = "Enabled"},
+            {parameter = "_color", typ = "color", localization = "Color"},
         },
         run = function(self, ...)
             BetterLightFX:SetColor(self._color.red, self._color.green, self._color.blue, self._hurtamount, self.name)
@@ -295,10 +295,10 @@ function BetterLightFX:InitEvents()
             self._ran_once = true
         end})
         
-    BetterLightFX:RegisterEvent("Bleedout", {priority = 6, enabled = true, loop = true, _color = Color(1, 1, 1, 1),  _progress = 0, 
+    BetterLightFX:RegisterEvent("Bleedout", {priority = 60, enabled = true, loop = true, _color = Color(1, 1, 1, 1),  _progress = 0, 
         options = {
-            enabled = {typ = "bool", localization = "Enabled"}, 
-            _color = {typ = "color", localization = "Color"}
+            {parameter = "enabled", typ = "bool", localization = "Enabled"},
+            {parameter = "_color", typ = "color", localization = "Color"},
         },
         run = function(self, ...)
             BetterLightFX:SetColor(self._color.red, self._color.green, self._color.blue, self._progress, self.name)
@@ -311,12 +311,11 @@ function BetterLightFX:InitEvents()
             self._ran_once = true
         end})
         
-    BetterLightFX:RegisterEvent("SwanSong", {priority = 7, enabled = true, loop = true, _color = Color(1, 0, 0.80, 1),  _t = 3, _frequency = 2,
+    BetterLightFX:RegisterEvent("SwanSong", {priority = 70, enabled = true, loop = true, _color = Color(1, 0, 0.80, 1),  _t = 3, _frequency = 2,
         options = {
-            enabled = {typ = "bool", localization = "Enabled"}, 
-            _color = {typ = "color", localization = "Color"},
-            _frequency = {typ = "number", localization = "Blinking Frequency", minVal = 0, maxVal = 30},
-            
+            {parameter = "enabled", typ = "bool", localization = "Enabled"},
+            {parameter = "_color", typ = "color", localization = "Color"},
+            {parameter = "_frequency", typ = "number", localization = "Blinking Frequency", minVal = 0, maxVal = 30},
         },
         run = function(self, ...)
             local dt = coroutine.yield()
@@ -328,11 +327,11 @@ function BetterLightFX:InitEvents()
             self._ran_once = true
         end})
         
-    BetterLightFX:RegisterEvent("Electrocuted", {priority = 8, enabled = true, blend = true, loop = true, _color = Color(1, 0, 0.80, 1), use_custom_color = false, _random_color = Color(1, 1, 1, 1), _alpha_fade_mod = 0,
+    BetterLightFX:RegisterEvent("Electrocuted", {priority = 80, enabled = true, blend = true, loop = true, _color = Color(1, 0, 0.80, 1), use_custom_color = false, _random_color = Color(1, 1, 1, 1), _alpha_fade_mod = 0,
         options = {
-            enabled = {typ = "bool", localization = "Enabled"}, 
-            use_custom_color = {typ = "bool", localization = "Use Custom Color Instead"}, 
-            _color = {typ = "color", localization = "Color"},
+            {parameter = "enabled", typ = "bool", localization = "Enabled"},
+            {parameter = "use_custom_color", typ = "bool", localization = "Use Custom Color"},
+            {parameter = "_color", typ = "color", localization = "Color"},
         },
         run = function(self, ...)
             
@@ -346,10 +345,10 @@ function BetterLightFX:InitEvents()
             self._ran_once = true
         end})
         
-    BetterLightFX:RegisterEvent("Flashbang", {priority = 9, enabled = true, blend = true, loop = true, _color = Color(1, 1, 1, 1), _flashamount = 0, 
+    BetterLightFX:RegisterEvent("Flashbang", {priority = 90, enabled = true, blend = true, loop = true, _color = Color(1, 1, 1, 1), _flashamount = 0, 
         options = {
-            enabled = {typ = "bool", localization = "Enabled"}, 
-            _color = {typ = "color", localization = "Color"}
+            {parameter = "enabled", typ = "bool", localization = "Enabled"},
+            {parameter = "_color", typ = "color", localization = "Color"},
         },
         run = function(self, ...)
             BetterLightFX:SetColor(self._color.red, self._color.green, self._color.blue, self._flashamount, self.name)
@@ -357,9 +356,9 @@ function BetterLightFX:InitEvents()
             self._ran_once = true
         end})
         
-    BetterLightFX:RegisterEvent("EndLoss", {priority = 10, enabled = true, loop = true, 
+    BetterLightFX:RegisterEvent("EndLoss", {priority = 100, enabled = true, loop = true, 
         options = {
-            enabled = {typ = "bool", localization = "Enabled"}
+            {parameter = "enabled", typ = "bool", localization = "Enabled"},
         }, 
         run = function(self, ...)
             while true do
@@ -385,10 +384,10 @@ function BetterLightFX:InitEvents()
             end
         end})
         
-    BetterLightFX:RegisterEvent("LevelUp", {priority = 11, enabled = true, blend = true, loop = false, _color = Color(1, 0, 0, 1),
+    BetterLightFX:RegisterEvent("LevelUp", {priority = 110, enabled = true, blend = true, loop = false, _color = Color(1, 0, 0, 1),
         options = {
-            enabled = {typ = "bool", localization = "Enabled"},
-            _color = {typ = "color", localization = "Color"}
+            {parameter = "enabled", typ = "bool", localization = "Enabled"},
+            {parameter = "_color", typ = "color", localization = "Color"},
         }, 
         run = function(self, ...)
             
@@ -410,10 +409,10 @@ function BetterLightFX:InitEvents()
             self._ran_once = true
         end})
         
-    BetterLightFX:RegisterEvent("SafeDrilled", {priority = 12, enabled = true, blend = true, loop = false, _color = Color(1, 1, 1, 1), _duration = 5,
+    BetterLightFX:RegisterEvent("SafeDrilled", {priority = 120, enabled = true, blend = true, loop = false, _color = Color(1, 1, 1, 1), _duration = 5,
         options = {
-            enabled = {typ = "bool", localization = "Enabled"},
-            _duration = {typ = "number", localization = "Light Duration (Seconds)", maxVal = 30}
+            {parameter = "enabled", typ = "bool", localization = "Enabled"},
+            {parameter = "_duration", typ = "number", localization = "Light Duration (Seconds)", maxVal = 30},
         }, 
         run = function(self, ...)
             
@@ -566,6 +565,10 @@ function BetterLightFX:RegisterEvent(name, parameters, override)
     if self.events[name] and not override then
         BetterLightFX:PrintDebug("[BetterLightFX] Cannot replace existing event, " .. name, BetterLightFX.LOG_LEVEL_INFO)
         return
+    end
+    
+    if self.events[name] and override then
+        parameters.priority = self.events[name].priority
     end
     
     self.events[name] = parameters
@@ -1229,12 +1232,12 @@ if Hooks then
             local eventData = BetterLightFX.IdleEventModOptions[BetterLightFX.Options.IdleEvent]
             
             if eventData and eventData.options then
-                for param, opt in pairs(eventData.options) do 
+                for _, opt in ipairs(eventData.options) do 
                     BetterLightFX:CreateEventOptionButton(node, {
                         event = eventData.event_name, 
                         typ = opt.typ, 
-                        value = BetterLightFX:GetIdleEventParamaterValue(eventData.event_name, param),
-                        param = param, 
+                        value = BetterLightFX:GetIdleEventParamaterValue(eventData.event_name, opt.parameter),
+                        param = opt.parameter, 
                         localization = opt.localization,
                         valMin = opt.minVal or 0,
                         valMax = opt.maxVal or 0
@@ -1280,12 +1283,12 @@ if Hooks then
             local eventData = BetterLightFX.EventModOptions[BetterLightFX.currentEvent]
             
             if eventData and eventData.options then
-                for param, opt in pairs(eventData.options) do 
+                for _, opt in ipairs(eventData.options) do 
                     BetterLightFX:CreateEventOptionButton(node, {
                         event = eventData.event_name, 
                         typ = opt.typ, 
-                        value = BetterLightFX:GetEventParamaterValue(eventData.event_name, param),
-                        param = param, 
+                        value = BetterLightFX:GetEventParamaterValue(eventData.event_name, opt.parameter),
+                        param = opt.parameter, 
                         localization = opt.localization,
                         valMin = opt.minVal or 0,
                         valMax = opt.maxVal or 0
