@@ -1121,23 +1121,29 @@ if Hooks then
     Hooks:RegisterHook(BetterLightFX.name .. "CreateEvents")
     
     Hooks:Add("MenuManagerPopulateCustomMenus", "Base_Populate" .. BetterLightFX.name .. "Menus", function( menu_manager, nodes )
-        --Add buttons
-        
-        MenuCallbackHandler.blfx_lightfxerror_missing_device = function(item)
-            return managers and managers.network and managers.network.account and not managers.network.account:has_alienware()
+        MenuCallbackHandler.blfx_options_opened = function(this, item)
+            if managers and managers.network and managers.network.account and not managers.network.account:has_alienware() then
+                local node = nodes[BetterLightFX.menuOptions]
+                if not node:item("LightFX_ERROR") then
+
+                    local item_params = {
+                        name = "LightFX_ERROR",
+                        text_id = "LightFX device is not present",
+                        help_id = "Please check that your LightFX device is on or if your LightFX Extender is installed",
+                        disabled_color = Color(0.80, 1, 0, 0),
+                        localize_help = false,
+                    }
+                    
+                    local item = node:create_item({ type = "CoreMenuItem.Item" }, item_params)
+                    item:set_enabled(false)
+                    node:insert_item(item, 1)
+                end
+            end
         end
         
-        MenuHelper:AddButton({
-            id = "LightFX_ERROR",
-            title = "LightFX device is not present",
-            desc = "Please check that your LightFX device is on or if your LightFX Extender is installed",
-            disabled_color = Color(0.80, 1, 0, 0),
-            disabled = true,
-            menu_id = BetterLightFX.menuOptions,
-            visible_callback = "blfx_lightfxerror_missing_device",
-            priority = 2000,
-        })
+        --Add buttons
         
+            
         MenuCallbackHandler.blfx_toggleBool = function(this, item)
             BetterLightFX.Options[item:name()] = item:value() == "on" and true or false
             BetterLightFX:Save()
@@ -1417,9 +1423,22 @@ if Hooks then
     
     Hooks:Add("MenuManagerBuildCustomMenus", "Base_Build" .. BetterLightFX.name .. "Menus", function(menu_manager, nodes)
 		nodes[BetterLightFX.menuOptions] = MenuHelper:BuildMenu(BetterLightFX.menuOptions)
-		MenuHelper:AddMenuItem(MenuHelper.menus.lua_mod_options_menu, BetterLightFX.menuOptions, BetterLightFX.name .. "MainOptionsButton", BetterLightFX.name .. "MainOptionsButtonDescription", 1)
         nodes[BetterLightFX.menuEventOptions] = MenuHelper:BuildMenu(BetterLightFX.menuEventOptions)
         nodes[BetterLightFX.menuIdleEventOptions] = MenuHelper:BuildMenu(BetterLightFX.menuIdleEventOptions)
+        
+
+        local node = nodes[LuaModManager.Constants._lua_mod_options_menu_id]
+        local item_params = {
+            name = "BLFOptionsBtn",
+            text_id = BetterLightFX.name .. "MainOptionsButton",
+            help_id = BetterLightFX.name .. "MainOptionsButtonDescription",
+            callback = "blfx_options_opened",
+            next_node = BetterLightFX.menuOptions
+        }
+        
+        local item = node:create_item({ type = "CoreMenuItem.Item" }, item_params)
+        node:add_item(item)
+        
     end)
 
 end
