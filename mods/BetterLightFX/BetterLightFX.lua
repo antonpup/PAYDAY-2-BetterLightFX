@@ -571,6 +571,12 @@ function BetterLightFX:RegisterEvent(name, parameters, override)
         parameters.priority = self.events[name].priority
     end
     
+    if not parameters.run then
+        parameters.run = function(self, ...)
+            self._ran_once = true
+        end
+    end
+    
     self.events[name] = parameters
     self.events[name].name = name
     self.events[name].display_name = "blfx_" .. name
@@ -1090,7 +1096,7 @@ if Hooks then
             ["BLFXevent_TakenSevereDamage"] = "Critical Damage",
             ["BLFXevent_Bleedout"] = "Bleedout",
             ["BLFXevent_SwanSong"] = "Swan Song",
-            ["BLFXevent_Electrocuted"] = "Electrocuted",
+            ["BLFXevent_Electrocuted"] = "Electrocution",
             ["BLFXevent_Flashbang"] = "Flashbang",
             ["BLFXevent_EndLoss"] = "Game Over",
             ["BLFXevent_LevelUp"] = "Level Up",
@@ -1116,6 +1122,21 @@ if Hooks then
     
     Hooks:Add("MenuManagerPopulateCustomMenus", "Base_Populate" .. BetterLightFX.name .. "Menus", function( menu_manager, nodes )
         --Add buttons
+        
+        MenuCallbackHandler.blfx_lightfxerror_missing_device = function(item)
+            return managers and managers.network and managers.network.account and not managers.network.account:has_alienware()
+        end
+        
+        MenuHelper:AddButton({
+            id = "LightFX_ERROR",
+            title = "LightFX device is not present",
+            desc = "Please check that your LightFX device is on or if your LightFX Extender is installed",
+            disabled_color = Color(0.80, 1, 0, 0),
+            disabled = true,
+            menu_id = BetterLightFX.menuOptions,
+            visible_callback = "blfx_lightfxerror_missing_device",
+            priority = 2000,
+        })
         
         MenuCallbackHandler.blfx_toggleBool = function(this, item)
             BetterLightFX.Options[item:name()] = item:value() == "on" and true or false
