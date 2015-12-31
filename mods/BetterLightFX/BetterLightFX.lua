@@ -1122,10 +1122,9 @@ if Hooks then
     
     Hooks:Add("MenuManagerPopulateCustomMenus", "Base_Populate" .. BetterLightFX.name .. "Menus", function( menu_manager, nodes )
         MenuCallbackHandler.blfx_options_opened = function(this, item)
+            local node = nodes[BetterLightFX.menuOptions]
             if managers and managers.network and managers.network.account and not managers.network.account:has_alienware() then
-                local node = nodes[BetterLightFX.menuOptions]
                 if not node:item("LightFX_ERROR") then
-
                     local item_params = {
                         name = "LightFX_ERROR",
                         text_id = "LightFX device is not present",
@@ -1138,12 +1137,14 @@ if Hooks then
                     item:set_enabled(false)
                     node:insert_item(item, 1)
                 end
+            else
+                if node:item("LightFX_ERROR") then
+                    node:delete_item("LightFX_ERROR")
+                end
             end
         end
         
         --Add buttons
-        
-            
         MenuCallbackHandler.blfx_toggleBool = function(this, item)
             BetterLightFX.Options[item:name()] = item:value() == "on" and true or false
             BetterLightFX:Save()
