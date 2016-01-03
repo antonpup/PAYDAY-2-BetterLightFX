@@ -8,9 +8,9 @@ if not _G.BetterLightFX then
     BetterLightFX.LOG_LEVEL_INFO = 1
     BetterLightFX.LOG_LEVEL_WARNING = 2
     BetterLightFX.LOG_LEVEL_DEBUG = 3
-    BetterLightFX.debug_enabled = true
-    BetterLightFX.debug_systemprint = true
-    BetterLightFX.debug_level = BetterLightFX.LOG_LEVEL_WARNING
+    BetterLightFX.debug_enabled = false
+    BetterLightFX.debug_systemprint = false
+    BetterLightFX.debug_level = BetterLightFX.LOG_LEVEL_NONE
     
     --Core
     BetterLightFX.routine = nil -- Main routine
@@ -134,7 +134,7 @@ function BetterLightFX:InitEvents()
             self._ran_once = true
         end})
     
-    BetterLightFX:RegisterIdleEvent("SingleColor", {_color = Color(1, 1, 1, 1), _brightness = 1, _pulsing = false, _pulserate = 1, _t = 3,
+    BetterLightFX:RegisterIdleEvent("SingleColor", {_color = Color(1, 0, 1, 0), _brightness = 1, _pulsing = false, _pulserate = 1, _t = 3,
         options = {
             {parameter = "_brightness", typ = "number", localization = "Brightness", minVal = 0, maxVal = 1},
             {parameter = "_color", typ = "color", localization = "Color"},
@@ -155,7 +155,7 @@ function BetterLightFX:InitEvents()
             self._ran_once = true
         end})
     
-    BetterLightFX:RegisterIdleEvent("TwoColorFade", {_color1 = Color(1, 1, 1, 1), _color2 = Color(1, 1, 1, 1), _brightness = 1, _speed = 1, _current_fade = 0,
+    BetterLightFX:RegisterIdleEvent("TwoColorFade", {_color1 = Color(1, 1, 0, 0), _color2 = Color(1, 0, 0, 1), _brightness = 1, _speed = 1, _current_fade = 0,
         options = {
             {parameter = "_brightness", typ = "number", localization = "Brightness", minVal = 0, maxVal = 1},
             {parameter = "_speed", typ = "number", localization = "Fade Speed", minVal = 0, maxVal = 2},
