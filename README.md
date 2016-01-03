@@ -16,7 +16,7 @@ BetterLightFX is a [Payday 2](http://store.steampowered.com/agecheck/app/218620/
 # How to Install
 1. First of all, if you do not have [Payday 2 BLT](http://paydaymods.com/download/) hook. Please download and install that.
 2. Download the latest release of BetterLightFX mod from the [releases section](https://github.com/antonpup/PAYDAY-2-BetterLightFX/releases).
-3. If you wish to use this mod with a Lightpack, Logitech, Corsair, or a Razer device. Please be sure to download and install [LightFX extender](https://github.com/Archomeda/lightfx-extender/releases/latest) into the Payday 2 directory.
+3. If you wish to use this mod with a Lightpack, Logitech, Corsair, or a Razer device. Please be sure to download and install [LightFX extender](https://github.com/Archomeda/lightfx-extender/releases/latest) (32 bit version for Payday 2) into the Payday 2 directory.
 4. Launch the game, go into Options -> Video -> Advanced -> Enable Alienware LightFX. You may have to restart the game for LightFX to take effect.
 5. You can change options of BetterLightFX by going into Options -> Mod Options -> BetterLightFX Options. This includes options for any event that has options, as well as idle events.
 6. If your device is not RGB, you can select a monochrome color scheme in the BetterLightFX Options.
