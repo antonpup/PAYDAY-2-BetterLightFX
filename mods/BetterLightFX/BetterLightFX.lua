@@ -825,6 +825,10 @@ function BetterLightFX:PushColor(color, event)
         return
     end
     
+    if not color then
+        BetterLightFX:PrintDebug("[BetterLightFX] Cannot push a nil color to device.", BetterLightFX.LOG_LEVEL_WARNING)
+    end
+    
     if self._current_blend_event and self._current_blend_event == event then
         self.current_blend_color = color
         return
@@ -840,7 +844,7 @@ function BetterLightFX:PushColor(color, event)
     end
     
     --Blend the colors
-    if self._current_blend_event then
+    if self._current_blend_event and self.current_blend_color then
         local tempColor = Color(0, 0, 0, 0)
         tempColor.alpha = 1 - (1 - self.current_blend_color.alpha) * (1 - color.alpha)
         if tempColor.alpha > 0 then

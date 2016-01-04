@@ -21,7 +21,7 @@
 	],
 	"updates" : [
 		{
-			"revision" : 1,
+			"revision" : 2,
 			"identifier" : "betterlightfx"
 		}
 	]
