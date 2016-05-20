@@ -38,22 +38,22 @@ end )
 
 
 function HUDAssaultCorner:flash_point_of_no_return_timer(beep)
-	local function flash_timer(o)
-		local t = 0
-		while t < 0.5 do
-			t = t + coroutine.yield()
-			local n = 1 - math.sin(t * 180)
-			local r = math.lerp(1 or self._point_of_no_return_color.r, 1, n)
-			local g = math.lerp(0 or self._point_of_no_return_color.g, 0.8, n)
-			local b = math.lerp(0 or self._point_of_no_return_color.b, 0.2, n)
-			o:set_color(Color(r, g, b))
+    local function flash_timer(o)
+        local t = 0
+        while t < 0.5 do
+            t = t + coroutine.yield()
+            local n = 1 - math.sin(t * 180)
+            local r = math.lerp(1 or self._point_of_no_return_color.r, 1, n)
+            local g = math.lerp(0 or self._point_of_no_return_color.g, 0.8, n)
+            local b = math.lerp(0 or self._point_of_no_return_color.b, 0.2, n)
+            o:set_color(Color(r, g, b))
             if BetterLightFX then
                 BetterLightFX:SetColor(r, g, b, 1, "PointOfNoReturn")
             end
             
-			o:set_font_size(math.lerp(tweak_data.hud_corner.noreturn_size, tweak_data.hud_corner.noreturn_size * 1.25, n))
-		end
-	end
-	local point_of_no_return_timer = self._noreturn_bg_box:child("point_of_no_return_timer")
-	point_of_no_return_timer:animate(flash_timer)
+            o:set_font_size(math.lerp(tweak_data.hud_corner.noreturn_size, tweak_data.hud_corner.noreturn_size * 1.25, n))
+        end
+    end
+    local point_of_no_return_timer = self._noreturn_bg_box:child("point_of_no_return_timer")
+    point_of_no_return_timer:animate(flash_timer)
 end

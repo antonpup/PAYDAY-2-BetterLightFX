@@ -29,7 +29,7 @@ if not _G.BetterLightFX then
     --Init stuff
     BetterLightFX._initialized = false
     BetterLightFX.LuaPath = ModPath .. "lua/"
-	BetterLightFX.HookPath = ModPath .. "Hooks/"
+    BetterLightFX.HookPath = ModPath .. "Hooks/"
     BetterLightFX.SavePath = SavePath
     BetterLightFX.HookFiles = {
         ["lib/network/matchmaking/networkaccountsteam"] = "NetworkAccountSteam.lua",
@@ -553,11 +553,11 @@ function BetterLightFX:CreateCoroutine()
 end
 
 function BetterLightFX:wait(seconds, fixed_dt)
-	local t = 0
-	while seconds > t do
-		local dt = coroutine.yield()
-		t = t + (fixed_dt and 0.033333335 or dt)
-	end
+    local t = 0
+    while seconds > t do
+        local dt = coroutine.yield()
+        t = t + (fixed_dt and 0.033333335 or dt)
+    end
 end
 
 function BetterLightFX:RegisterEvent(name, parameters, override)
@@ -1000,49 +1000,49 @@ end
 
 function BetterLightFX:CreateBoolOption(node, params)
     local data = {
-		type = "CoreMenuItemToggle.ItemToggle",
-		{
-			_meta = "option",
-			icon = "guis/textures/menu_tickbox",
-			value = "on",
-			x = 24,
-			y = 0,
-			w = 24,
-			h = 24,
-			s_icon = "guis/textures/menu_tickbox",
-			s_x = 24,
-			s_y = 24,
-			s_w = 24,
-			s_h = 24
-		},
-		{
-			_meta = "option",
-			icon = "guis/textures/menu_tickbox",
-			value = "off",
-			x = 0,
-			y = 0,
-			w = 24,
-			h = 24,
-			s_icon = "guis/textures/menu_tickbox",
-			s_x = 0,
-			s_y = 24,
-			s_w = 24,
-			s_h = 24
-		}
-	}
+        type = "CoreMenuItemToggle.ItemToggle",
+        {
+            _meta = "option",
+            icon = "guis/textures/menu_tickbox",
+            value = "on",
+            x = 24,
+            y = 0,
+            w = 24,
+            h = 24,
+            s_icon = "guis/textures/menu_tickbox",
+            s_x = 24,
+            s_y = 24,
+            s_w = 24,
+            s_h = 24
+        },
+        {
+            _meta = "option",
+            icon = "guis/textures/menu_tickbox",
+            value = "off",
+            x = 0,
+            y = 0,
+            w = 24,
+            h = 24,
+            s_icon = "guis/textures/menu_tickbox",
+            s_x = 0,
+            s_y = 24,
+            s_w = 24,
+            s_h = 24
+        }
+    }
 
-	local itemparams = {
-		name = params.event .. "|" .. params.param,
-		text_id = params.localization,
-		callback = params.callback or "blfx_EventBoolCallback",
-		disabled_color = Color( 0.25, 1, 1, 1 ),
-		icon_by_text = false,
-		localize = false,
+    local itemparams = {
+        name = params.event .. "|" .. params.param,
+        text_id = params.localization,
+        callback = params.callback or "blfx_EventBoolCallback",
+        disabled_color = Color( 0.25, 1, 1, 1 ),
+        icon_by_text = false,
+        localize = false,
         eventParams = params
-	}
+    }
 
-	local item = node:create_item( data, itemparams )
-	item:set_value( params.value and "on" or "off" )
+    local item = node:create_item( data, itemparams )
+    item:set_value( params.value and "on" or "off" )
     node:add_item(item)
     item.dirty_callback = nil
     
@@ -1051,42 +1051,42 @@ function BetterLightFX:CreateBoolOption(node, params)
 end
     
 if not BetterLightFX.init then
-	for p, d in pairs(BetterLightFX.LUA) do
-		dofile(BetterLightFX.LuaPath .. d)
-	end
-	BetterLightFX:LoadOptions()
+    for p, d in pairs(BetterLightFX.LUA) do
+        dofile(BetterLightFX.LuaPath .. d)
+    end
+    BetterLightFX:LoadOptions()
     BetterLightFX:InitEvents()
-	BetterLightFX.init = true
+    BetterLightFX.init = true
 end
 
 if RequiredScript then
-	local requiredScript = RequiredScript:lower()
-	if BetterLightFX.HookFiles[requiredScript] then
-		dofile( BetterLightFX.HookPath .. BetterLightFX.HookFiles[requiredScript] )
-	end
+    local requiredScript = RequiredScript:lower()
+    if BetterLightFX.HookFiles[requiredScript] then
+        dofile( BetterLightFX.HookPath .. BetterLightFX.HookFiles[requiredScript] )
+    end
 end
 
 if Hooks then
     Hooks:Add("LocalizationManagerPostInit", BetterLightFX.name .. "Localization", function(loc)
-		LocalizationManager:add_localized_strings({
-			[BetterLightFX.name .. "MainOptionsButton"] = BetterLightFX.name .. " Options",
-			[BetterLightFX.name .. "MainOptionsButtonDescription"] = "Modify " .. BetterLightFX.name .. " options",
-			[BetterLightFX.name .."toggle_title"] = "Enabled",
-			[BetterLightFX.name .."toggle_help"] = "Toggles the BetterLightFX",
+        LocalizationManager:add_localized_strings({
+            [BetterLightFX.name .. "MainOptionsButton"] = BetterLightFX.name .. " Options",
+            [BetterLightFX.name .. "MainOptionsButtonDescription"] = "Modify " .. BetterLightFX.name .. " options",
+            [BetterLightFX.name .."toggle_title"] = "Enabled",
+            [BetterLightFX.name .."toggle_help"] = "Toggles the BetterLightFX",
             [BetterLightFX.name .. "color_scheme_title"] = "Color Scheme",
-			[BetterLightFX.name .. "color_scheme_desc"] = "Allows for selection of preferred coloring, in the event that you do not have an RGB device",
+            [BetterLightFX.name .. "color_scheme_desc"] = "Allows for selection of preferred coloring, in the event that you do not have an RGB device",
             [BetterLightFX.name .. "monochrome_brightness_title"] = "Monochrome Brightness",
-			[BetterLightFX.name .. "monochrome_brightness_desc"] = "Adjusts the brightness for monochrome color scheme",
+            [BetterLightFX.name .. "monochrome_brightness_desc"] = "Adjusts the brightness for monochrome color scheme",
             [BetterLightFX.name .. "led_refresh_rate_title"] = "Lights Update Rate",
-			[BetterLightFX.name .. "led_refresh_rate_desc"] = "The rate at which lights are updated per second (Less = smooth effects, high performance impact, More = choppy effects, lower performance impact)",
+            [BetterLightFX.name .. "led_refresh_rate_desc"] = "The rate at which lights are updated per second (Less = smooth effects, high performance impact, More = choppy effects, lower performance impact)",
             [BetterLightFX.name .. "idleEvent_title"] = "Idle Action",
-			[BetterLightFX.name .. "idleEvent_desc"] = "When lights are not being set, this event will be played",
+            [BetterLightFX.name .. "idleEvent_desc"] = "When lights are not being set, this event will be played",
             [BetterLightFX.name .. "IdleEvents_title"] = "Idle Settings",
-			[BetterLightFX.name .. "IdleEvents_desc"] = "Change options of currently selected Idle Event",
+            [BetterLightFX.name .. "IdleEvents_desc"] = "Change options of currently selected Idle Event",
             [BetterLightFX.name .. "modEvents_title"] = "Modify Events",
-			[BetterLightFX.name .. "modEvents_desc"] = "Change options of BetterLightFX events",
+            [BetterLightFX.name .. "modEvents_desc"] = "Change options of BetterLightFX events",
             [BetterLightFX.name .. "events_title"] = "Event",
-			[BetterLightFX.name .. "events_desc"] = "Select an event to modify",
+            [BetterLightFX.name .. "events_desc"] = "Select an event to modify",
             
             ["blfx_ColorsOut"] = "Dark",
             ["blfx_SingleColor"] = "Single Color",
@@ -1094,7 +1094,7 @@ if Hooks then
             ["blfx_Rainbow"] = "Rainbow",
             
             ["BLFXevent_Suspicion"] = "Suspicion",
-			["BLFXevent_AssaultIndicator"] = "Assault Indicator",
+            ["BLFXevent_AssaultIndicator"] = "Assault Indicator",
             ["BLFXevent_PointOfNoReturn"] = "Point Of No Return",
             ["BLFXevent_TakenDamage"] = "Taken Damage",
             ["BLFXevent_TakenSevereDamage"] = "Critical Damage",
@@ -1106,14 +1106,14 @@ if Hooks then
             ["BLFXevent_LevelUp"] = "Level Up",
             ["BLFXevent_SafeDrilled"] = "Safe Drilled",
             
-		})
+        })
         
         for _, colorScheme in pairs(BetterLightFX.ColorSchemeOptions) do
             LocalizationManager:add_localized_strings({
                 [colorScheme.option_name] = colorScheme.name
             })
         end
-	end)
+    end)
 
     Hooks:Add("MenuManagerSetupCustomMenus", "Base_Setup" .. BetterLightFX.name .. "Menus", function( menu_manager, nodes )
         MenuHelper:NewMenu(BetterLightFX.menuOptions)
@@ -1156,11 +1156,11 @@ if Hooks then
         
         MenuHelper:AddToggle({
             id = "Enabled",
-			title = BetterLightFX.name .."toggle_title",
-			desc = BetterLightFX.name .."toggle_help",
-			callback = "blfx_toggleBool",
-			menu_id = BetterLightFX.menuOptions,
-			value = BetterLightFX.Options.Enabled,
+            title = BetterLightFX.name .."toggle_title",
+            desc = BetterLightFX.name .."toggle_help",
+            callback = "blfx_toggleBool",
+            menu_id = BetterLightFX.menuOptions,
+            value = BetterLightFX.Options.Enabled,
             priority = 1000
         })
         
@@ -1203,15 +1203,15 @@ if Hooks then
         end
         
         MenuHelper:AddMultipleChoice({
-			id = BetterLightFX.name .. "colorScheme",
-			title = BetterLightFX.name .. "color_scheme_title",
-			desc = BetterLightFX.name .. "color_scheme_desc",
-			callback = "blfx_colorSchemeChange",
-			menu_id = BetterLightFX.menuOptions,
-			value = BetterLightFX.Options.ColorScheme,
-			items = BetterLightFX:GetSubVariableFromArray(BetterLightFX.ColorSchemeOptions, "option_name"),
-			priority = 998
-		})
+            id = BetterLightFX.name .. "colorScheme",
+            title = BetterLightFX.name .. "color_scheme_title",
+            desc = BetterLightFX.name .. "color_scheme_desc",
+            callback = "blfx_colorSchemeChange",
+            menu_id = BetterLightFX.menuOptions,
+            value = BetterLightFX.Options.ColorScheme,
+            items = BetterLightFX:GetSubVariableFromArray(BetterLightFX.ColorSchemeOptions, "option_name"),
+            priority = 998
+        })
         
         MenuCallbackHandler.blfx_monochrome_brightness = function(this, item)
             BetterLightFX.Options.Monochrome_Brightness = item:value()
@@ -1245,15 +1245,15 @@ if Hooks then
         end
         
         MenuHelper:AddMultipleChoice({
-			id = BetterLightFX.name .. "idleEvent",
-			title = BetterLightFX.name .. "idleEvent_title",
-			desc = BetterLightFX.name .. "idleEvent_desc",
-			callback = "blfx_IdleEventChange",
-			menu_id = BetterLightFX.menuOptions,
-			value = BetterLightFX.Options.IdleEvent,
-			items = BetterLightFX:GetSubVariableFromArray(BetterLightFX.IdleEventModOptions, "event_name", "blfx_"),
-			priority = 995
-		})
+            id = BetterLightFX.name .. "idleEvent",
+            title = BetterLightFX.name .. "idleEvent_title",
+            desc = BetterLightFX.name .. "idleEvent_desc",
+            callback = "blfx_IdleEventChange",
+            menu_id = BetterLightFX.menuOptions,
+            value = BetterLightFX.Options.IdleEvent,
+            items = BetterLightFX:GetSubVariableFromArray(BetterLightFX.IdleEventModOptions, "event_name", "blfx_"),
+            priority = 995
+        })
         
         
         MenuCallbackHandler.blfx_createIdleEventMenuItems = function(this, item)
@@ -1427,7 +1427,7 @@ if Hooks then
     end)
     
     Hooks:Add("MenuManagerBuildCustomMenus", "Base_Build" .. BetterLightFX.name .. "Menus", function(menu_manager, nodes)
-		nodes[BetterLightFX.menuOptions] = MenuHelper:BuildMenu(BetterLightFX.menuOptions)
+        nodes[BetterLightFX.menuOptions] = MenuHelper:BuildMenu(BetterLightFX.menuOptions)
         nodes[BetterLightFX.menuEventOptions] = MenuHelper:BuildMenu(BetterLightFX.menuEventOptions)
         nodes[BetterLightFX.menuIdleEventOptions] = MenuHelper:BuildMenu(BetterLightFX.menuIdleEventOptions)
         

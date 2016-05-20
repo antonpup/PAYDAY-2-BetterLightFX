@@ -1,13 +1,13 @@
 {
-	"name" : "BetterLightFX",
-	"description" : "",
-	"author" : "I am not a spy... && GREAT BIG BUSHY BEARD",
-	"contact" : "iamnotaspy@lastbullet.net",
-	"version" : "1",
-	"priority" : 666,
-	"hooks" : [
-    	{ "hook_id" : "lib/network/matchmaking/networkaccountsteam", "script_path" : "BetterLightFX.lua" },
-		{ "hook_id" : "lib/managers/menu/menuscenemanager", "script_path" : "BetterLightFX.lua" },
+    "name" : "BetterLightFX",
+    "description" : "Better LightFX extends the default LightFX implementation to be more interactive with the game",
+    "author" : "I am not a spy... && GREAT BIG BUSHY BEARD",
+    "contact" : "iamnotaspy@lastbullet.net",
+    "version" : "1",
+    "priority" : 666,
+    "hooks" : [
+        { "hook_id" : "lib/network/matchmaking/networkaccountsteam", "script_path" : "BetterLightFX.lua" },
+    { "hook_id" : "lib/managers/menu/menuscenemanager", "script_path" : "BetterLightFX.lua" },
         { "hook_id" : "lib/managers/group_ai_states/groupaistatebase", "script_path" : "BetterLightFX.lua" },
         { "hook_id" : "lib/managers/hud/hudsuspicion", "script_path" : "BetterLightFX.lua" },
         { "hook_id" : "lib/units/beings/player/playerdamage", "script_path" : "BetterLightFX.lua" },
@@ -18,11 +18,11 @@
         { "hook_id" : "lib/managers/hud/hudstageendscreen", "script_path" : "BetterLightFX.lua" },
         { "hook_id" : "lib/managers/hud/hudhitdirection", "script_path" : "BetterLightFX.lua" },
         { "hook_id" : "lib/units/beings/player/states/playertased", "script_path" : "BetterLightFX.lua" }
-	],
-	"updates" : [
-		{
-			"revision" : 2,
-			"identifier" : "betterlightfx"
-		}
-	]
+    ],
+    "updates" : [
+        {
+            "revision" : 3,
+            "identifier" : "betterlightfx"
+        }
+    ]
 }
